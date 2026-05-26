@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AIFR sessions (users should NOT commit these)
+.aifr/
+
+# Logs
+*.log
+
+# Env
+.env
+.env.local
