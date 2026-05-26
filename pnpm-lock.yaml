@@ -46,6 +46,12 @@ importers:
       '@aifr/event-schema':
         specifier: workspace:^
         version: link:../../packages/event-schema
+      '@aifr/parser-claude':
+        specifier: workspace:^
+        version: link:../../packages/parser-claude
+      '@aifr/parser-codex':
+        specifier: workspace:^
+        version: link:../../packages/parser-codex
       commander:
         specifier: 'catalog:'
         version: 13.1.0
@@ -96,6 +102,44 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.19
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.1(postcss@8.5.15)(tsx@4.22.3)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@22.19.19)(tsx@4.22.3)
+
+  packages/parser-claude:
+    dependencies:
+      '@aifr/event-schema':
+        specifier: workspace:^
+        version: link:../event-schema
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.19
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.1(postcss@8.5.15)(tsx@4.22.3)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/node@22.19.19)(tsx@4.22.3)
+
+  packages/parser-codex:
+    dependencies:
+      '@aifr/event-schema':
+        specifier: workspace:^
+        version: link:../event-schema
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

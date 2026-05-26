@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { startCommand } from './commands/start.js';
 import { statusCommand } from './commands/status.js';
+import { importCommand } from './commands/import.js';
 
 const program = new Command();
 
@@ -14,6 +15,7 @@ program
 initCommand(program);
 startCommand(program);
 statusCommand(program);
+importCommand(program);
 
 program.parse(process.argv);
 

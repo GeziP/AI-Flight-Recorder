@@ -7,7 +7,7 @@ export default defineConfig({
   clean: true,
   splitting: false,
   sourcemap: true,
-  noExternal: ['@aifr/core', '@aifr/event-schema'],
+  noExternal: ['@aifr/core', '@aifr/event-schema', '@aifr/parser-claude', '@aifr/parser-codex'],
   banner: {
     js: '#!/usr/bin/env node',
   },
