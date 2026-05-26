@@ -8,12 +8,13 @@ import {
   AIFR_EVENT_SCHEMA_VERSION,
   type SessionStartEvent,
   type SessionEndEvent,
+  type DiffEvent,
   type AIFREvent,
   type AgentType,
 } from '@aifr/event-schema';
 import { EventWriter } from './event-writer.js';
 import { writeMetadata, type SessionMetadata } from './metadata.js';
-import { captureGitBaseline } from './git.js';
+import { captureGitBaseline, captureDiffToFile, getDiffStat } from './git.js';
 
 export interface SessionOptions {
   projectPath: string;
@@ -77,6 +78,27 @@ export class Session {
       const baseline = await captureGitBaseline(this.options.projectPath);
       gitRef = baseline.currentRef;
       gitBranch = baseline.currentBranch;
+
+      // Capture baseline diff
+      const gitDir = path.join(this.sessionDir, 'git');
+      const diffResult = await captureDiffToFile(this.options.projectPath, gitDir, 'before.patch');
+
+      // Write baseline diff event if there are changes
+      if (diffResult.patch.trim()) {
+        const baselineEvent: DiffEvent = {
+          id: generateEventId(),
+          sessionId: this.sessionId,
+          type: 'diff',
+          timestamp: Date.now(),
+          schemaVersion: AIFR_EVENT_SCHEMA_VERSION,
+          files: diffResult.files,
+          totalAdditions: diffResult.totalAdditions,
+          totalDeletions: diffResult.totalDeletions,
+          isBaseline: true,
+          snapshotLabel: 'baseline',
+        };
+        await this.appendEvent(baselineEvent);
+      }
     } catch {
       // Git not available or not a git repo
     }
@@ -124,6 +146,37 @@ export class Session {
       throw new Error('Session not started. Call start() first.');
     }
 
+    // Capture final diff
+    try {
+      const gitDir = path.join(this.sessionDir, 'git');
+      const diffResult = await captureDiffToFile(this.options.projectPath, gitDir, 'after.patch');
+
+      if (diffResult.patch.trim()) {
+        const endDiffEvent: DiffEvent = {
+          id: generateEventId(),
+          sessionId: this.sessionId,
+          type: 'diff',
+          timestamp: Date.now(),
+          schemaVersion: AIFR_EVENT_SCHEMA_VERSION,
+          files: diffResult.files,
+          totalAdditions: diffResult.totalAdditions,
+          totalDeletions: diffResult.totalDeletions,
+          isBaseline: false,
+          snapshotLabel: 'final',
+        };
+        await this.appendEvent(endDiffEvent);
+      }
+    } catch {
+      // Git not available
+    }
+
+    let finalGitRef = 'unknown';
+    try {
+      finalGitRef = (await captureGitBaseline(this.options.projectPath)).currentRef;
+    } catch {
+      // Git not available
+    }
+
     const endEvent: SessionEndEvent = {
       id: generateEventId(),
       sessionId: this.sessionId,
@@ -134,7 +187,7 @@ export class Session {
       status,
       durationMs: Date.now() - this.startTime,
       eventCount: this.eventCount,
-      gitRef: 'unknown',
+      gitRef: finalGitRef,
       errorMessage,
     };
     await this.appendEvent(endEvent);
@@ -149,7 +202,7 @@ export class Session {
       startTime: this.startTime,
       endTime: Date.now(),
       durationMs: Date.now() - this.startTime,
-      gitRef: 'unknown',
+      gitRef: finalGitRef,
       status: status === 'completed' ? 'completed' : status,
       eventCount: this.eventCount,
     };

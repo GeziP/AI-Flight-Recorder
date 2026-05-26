@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@aifr/event-schema": "workspace:^",
+    "node-pty": "catalog:",
     "simple-git": "catalog:"
   },
   "devDependencies": {
