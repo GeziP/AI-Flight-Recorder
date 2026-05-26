@@ -1,0 +1,22 @@
+{
+  "name": "aifr",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI Flight Recorder - OpenTelemetry for AI Software Development",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r typecheck",
+    "aifr": "pnpm --filter @aifr/cli run start",
+    "dev:web": "pnpm --filter @aifr/web run dev"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@10.33.2",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "node-pty"]
+  }
+}
