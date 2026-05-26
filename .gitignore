@@ -23,6 +23,10 @@ Thumbs.db
 # Logs
 *.log
 
+# Next.js
+.next/
+out/
+
 # Env
 .env
 .env.local
