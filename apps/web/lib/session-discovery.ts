@@ -1,24 +1,35 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { homedir } from 'node:os';
 
 export interface SessionMetadata {
   sessionId: string;
-  projectPath: string;
+  projectPath?: string;
   agentType: string;
-  startTime: number;
+  startTime?: number;
   endTime?: number;
   durationMs?: number;
-  gitRef: string;
+  gitRef?: string;
   gitBranch?: string;
-  status: string;
+  status?: string;
   eventCount?: number;
+  sourceSessionId?: string;
+  sourceFile?: string;
+  importedAt?: string;
 }
 
 export interface DiscoveredSession {
   name: string;
   dir: string;
   metadata?: SessionMetadata;
+}
+
+export interface DiscoveredProject {
+  name: string;
+  dir: string;
+  sessionCount: number;
+  lastModified?: Date;
 }
 
 export function extractSessionId(sessionDirName: string): string {
@@ -35,6 +46,80 @@ export function formatSessionDate(sessionDirName: string): string {
   const hour = match[4];
   const minute = match[5];
   return `${month} ${day}, ${hour}:${minute}`;
+}
+
+/**
+ * Discover all projects that have .aifr directories.
+ * Scans common development directories and the current working directory.
+ */
+export async function discoverProjects(): Promise<DiscoveredProject[]> {
+  const projects: DiscoveredProject[] = [];
+  const seenDirs = new Set<string>();
+
+  // Search paths to scan for .aifr directories
+  const searchPaths = [
+    process.cwd(),
+    path.join(homedir(), 'projects'),
+    path.join(homedir(), 'code'),
+    path.join(homedir(), 'dev'),
+    path.join(homedir(), 'src'),
+    // Common Windows paths
+    'D:\\gezi',
+    'E:\\gezi',
+  ];
+
+  for (const searchPath of searchPaths) {
+    if (!existsSync(searchPath)) continue;
+
+    try {
+      // Check if searchPath itself has .aifr
+      const aifrDir = path.join(searchPath, '.aifr');
+      if (existsSync(aifrDir) && !seenDirs.has(searchPath)) {
+        seenDirs.add(searchPath);
+        const sessions = await discoverSessions(aifrDir);
+        if (sessions.length > 0) {
+          projects.push({
+            name: path.basename(searchPath),
+            dir: aifrDir,
+            sessionCount: sessions.length,
+            lastModified: sessions[0]?.metadata?.startTime
+              ? new Date(sessions[0].metadata.startTime)
+              : undefined,
+          });
+        }
+      }
+
+      // Scan subdirectories
+      let entries;
+      try {
+        entries = await readdir(searchPath, { withFileTypes: true });
+      } catch { continue; }
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const subDir = path.join(searchPath, entry.name);
+        const aifrSubDir = path.join(subDir, '.aifr');
+        if (existsSync(aifrSubDir) && !seenDirs.has(subDir)) {
+          seenDirs.add(subDir);
+          const sessions = await discoverSessions(aifrSubDir);
+          if (sessions.length > 0) {
+            projects.push({
+              name: entry.name,
+              dir: aifrSubDir,
+              sessionCount: sessions.length,
+              lastModified: sessions[0]?.metadata?.startTime
+                ? new Date(sessions[0].metadata.startTime)
+                : undefined,
+            });
+          }
+        }
+      }
+    } catch {
+      // Skip inaccessible directories
+    }
+  }
+
+  return projects.sort((a, b) => (b.lastModified?.getTime() ?? 0) - (a.lastModified?.getTime() ?? 0));
 }
 
 export async function discoverSessions(aifrDir: string): Promise<DiscoveredSession[]> {
@@ -60,4 +145,13 @@ export async function discoverSessions(aifrDir: string): Promise<DiscoveredSessi
 
   sessions.sort((a, b) => b.name.localeCompare(a.name));
   return sessions;
+}
+
+/**
+ * Find a project's .aifr directory by project name.
+ */
+export async function findProjectDir(projectName: string): Promise<string | null> {
+  const projects = await discoverProjects();
+  const project = projects.find(p => p.name === projectName);
+  return project?.dir ?? null;
 }

@@ -1,5 +1,5 @@
 import { readEventsFile } from '@/lib/jsonl-reader';
-import { MOCK_SESSIONS_DIR } from '@/lib/mock-data';
+import { resolveSessionDir } from '@/lib/project-resolver';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import type { DiffEvent } from '@aifr/event-schema';
@@ -10,8 +10,10 @@ export default async function DiffPage({
 }: {
   params: Promise<{ project: string; session: string }>;
 }) {
-  const { session } = await params;
-  const sessionDir = path.join(MOCK_SESSIONS_DIR, session);
+  const { project, session } = await params;
+  const sessionDir = await resolveSessionDir(project, session);
+  if (!sessionDir) return <div className="p-8 text-text-muted">Session not found.</div>;
+
   const result = await readEventsFile(path.join(sessionDir, 'events.jsonl'));
   const diffEvents = result.events.filter(
     (e): e is DiffEvent => e.type === 'diff' && !e.isBaseline,

@@ -1,6 +1,5 @@
 import { Sidebar } from '@/components/sidebar';
-import { discoverSessions } from '@/lib/session-discovery';
-import { MOCK_SESSIONS_DIR } from '@/lib/mock-data';
+import { discoverProjects, discoverSessions } from '@/lib/session-discovery';
 
 export default async function ProjectLayout({
   children,
@@ -10,7 +9,9 @@ export default async function ProjectLayout({
   params: Promise<{ project: string }>;
 }) {
   const { project } = await params;
-  const sessions = await discoverSessions(MOCK_SESSIONS_DIR);
+  const projects = await discoverProjects();
+  const projectInfo = projects.find(p => p.name === project);
+  const sessions = projectInfo ? await discoverSessions(projectInfo.dir) : [];
 
   return (
     <div className="flex h-screen">
