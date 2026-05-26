@@ -12,6 +12,59 @@ AIFR records what actually happens when you use AI coding agents:
 - Every terminal command, every file change, every test result — captured as an auditable event stream
 - Replay sessions in a web UI with xterm.js terminal playback and diff2html side-by-side diffs
 - Import existing Claude Code and Codex CLI sessions
+- Map AI prompts to the code changes they produced (Prompt-to-Diff)
+
+## Status
+
+AIFR is in **v0.1** — all core features are implemented and functional:
+
+- Event schema with 8 event types and Zod validation
+- CLI: `init`, `start`, `status`, `import claude/codex`
+- Parsers for Claude Code (`~/.claude/projects/`) and Codex CLI (`~/.codex/sessions/`)
+- Web UI with 5 views: Timeline, Events, Diff, Replay, Prompt-to-Diff
+- Terminal recording via node-pty
+
+See [docs/roadmap.md](docs/roadmap.md) for planned features.
+
+## Screenshots
+
+### Homepage
+
+<img src="docs/screenshots/homepage.png" width="600" alt="AIFR Homepage" />
+
+### Session List
+
+<img src="docs/screenshots/sessions.png" width="700" alt="Session list with sidebar navigation" />
+
+### Timeline
+
+Chronological event stream with colored markers for prompts, commands, tools, diffs, tests, and retries.
+
+<img src="docs/screenshots/timeline.png" width="700" alt="Timeline view" />
+
+### Events
+
+Search, filter by type, and inspect raw JSON for any event.
+
+<img src="docs/screenshots/events-detail.png" width="700" alt="Events view with JSON detail panel" />
+
+### Replay
+
+Terminal playback with play/pause, speed control (1x/2x/4x), and event markers on the progress bar.
+
+<img src="docs/screenshots/replay.png" width="700" alt="Replay view with terminal playback" />
+
+### Prompt-to-Diff
+
+Select a prompt and see its execution path — which tools were called and what files changed.
+
+<img src="docs/screenshots/prompt-to-diff.png" width="700" alt="Prompt-to-Diff mapping view" />
+
+### Codex CLI Support
+
+Imported Codex CLI sessions display correctly with agent identification and command events.
+
+<img src="docs/screenshots/codex-timeline.png" width="700" alt="Codex CLI session timeline" />
 
 ## Quick Start
 
@@ -50,7 +103,7 @@ cd apps/web
 pnpm dev
 ```
 
-Open `http://localhost:3000` to browse projects, sessions, and:
+Open `http://localhost:3000` to browse projects, sessions, and explore:
 
 - **Timeline** — Chronological view of all events in a session
 - **Prompt-to-Diff** — Map AI prompts to the code changes they produced
@@ -69,11 +122,15 @@ aifr/
 │   ├── event-schema/     # Unified event types + Zod validation
 │   ├── core/             # Session lifecycle, JSONL writer, Git capture, PTY recorder
 │   ├── parser-claude/    # Parse ~/.claude/projects/ JSONL sessions
-│   ├── parser-codex/     # Parse ~/.codex/sessions/ JSONL sessions
-│   ├── parser-cursor/    # (Scaffold, not yet implemented)
-│   └── replay-engine/    # (Scaffold, not yet implemented)
+│   └── parser-codex/     # Parse ~/.codex/sessions/ JSONL sessions
 ├── docs/
+│   ├── architecture.md
+│   ├── session-format.md
+│   ├── roadmap.md
+│   └── known-limitations.md
 └── scripts/
+    ├── install.sh        # Unix installer
+    └── install.ps1       # Windows installer
 ```
 
 ### Event Schema
@@ -102,7 +159,7 @@ All events are append-only JSONL with schema versioning. See [docs/session-forma
 |-------|--------|----------------|
 | Claude Code | ✅ `~/.claude/projects/` | ✅ via PTY |
 | Codex CLI | ✅ `~/.codex/sessions/` | ✅ via PTY |
-| Cursor | 🔜 (scaffold ready) | 🔜 |
+| Cursor | 🔜 | 🔜 |
 
 ## Development
 
@@ -125,6 +182,14 @@ pnpm aifr <command>
 # Start web UI
 cd apps/web && pnpm dev
 ```
+
+## Known Limitations
+
+- Imported sessions have no structured diff events or git patches
+- Codex sessions contain commands but no user prompts in the event stream
+- Replay playback is based on terminal log output, not structured timing data
+
+See [docs/known-limitations.md](docs/known-limitations.md) for details.
 
 ## License
 
