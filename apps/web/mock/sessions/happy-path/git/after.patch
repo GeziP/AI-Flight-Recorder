@@ -1,0 +1,29 @@
+diff --git a/src/scheduler.ts b/src/scheduler.ts
+index abc1234..def5678 100644
+--- a/src/scheduler.ts
++++ b/src/scheduler.ts
+@@ -39,9 +39,12 @@ export class Scheduler {
+-    scheduler.run(task, (err, data) => {
+-      if (err) callback(error, result);
+-    });
++  async run(task: Task): Promise<Result> {
++    try {
++      const result = await executeAsync(task);
++      return result;
++    } catch (error) {
++      logger.error(error);
++      throw error;
++    }
++  }
+diff --git a/src/scheduler.test.ts b/src/scheduler.test.ts
+index 1111111..2222222 100644
+--- a/src/scheduler.test.ts
++++ b/src/scheduler.test.ts
+@@ -10,5 +10,11 @@ describe('Scheduler', () => {
+-  it('should handle callbacks', () => {
+-    scheduler.run(task, (err, data) => { ... });
+-  });
++  it('should handle async/await', async () => {
++    const result = await scheduler.run(task);
++    expect(result).toBeDefined();
++  });

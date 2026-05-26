@@ -1,0 +1,12 @@
+{
+  "sessionId": "ghi789",
+  "projectPath": "/home/dev/my-project",
+  "agentType": "claude",
+  "startTime": 1716744000000,
+  "endTime": 1716747600000,
+  "durationMs": 3600000,
+  "gitRef": "jkl3456",
+  "gitBranch": "main",
+  "status": "completed",
+  "eventCount": 15
+}

@@ -1,0 +1,12 @@
+{
+  "sessionId": "abc123",
+  "projectPath": "/home/dev/my-project",
+  "agentType": "claude",
+  "startTime": 1716710412000,
+  "endTime": 1716714030000,
+  "durationMs": 3618000,
+  "gitRef": "def5678",
+  "gitBranch": "main",
+  "status": "completed",
+  "eventCount": 12
+}

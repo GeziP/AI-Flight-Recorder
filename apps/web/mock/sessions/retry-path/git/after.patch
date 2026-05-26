@@ -1,0 +1,30 @@
+diff --git a/src/middleware/auth.ts b/src/middleware/auth.ts
+--- a/src/middleware/auth.ts
++++ b/src/middleware/auth.ts
+@@ -10,4 +10,27 @@ export function authMiddleware(req, res, next) {
+-  next();
++  if (!req.body.email || !isValidEmail(req.body.email)) {
++    return res.status(400).json({ error: 'Invalid email' });
++  }
++  if (containsXSS(req.body.username)) {
++    return res.status(400).json({ error: 'Invalid username' });
++  }
++  next();
+diff --git a/src/middleware/rate-limit.ts b/src/middleware/rate-limit.ts
+--- a/src/middleware/rate-limit.ts
++++ b/src/middleware/rate-limit.ts
+@@ -1,0 +1,15 @@
++export function rateLimiter(options: RateLimitOptions) {
++  const hits = new Map<string, number[]>();
++  return (req: Request, res: Response, next: NextFunction) => {
++    const key = req.ip ?? 'unknown';
++    const now = Date.now();
++    const windowHits = (hits.get(key) ?? []).filter(t => now - t < options.windowMs);
++    if (windowHits.length >= options.max) {
++      return res.status(429).json({ error: 'Too many requests' });
++    }
++    windowHits.push(now);
++    hits.set(key, windowHits);
++    next();
++  };
++}
