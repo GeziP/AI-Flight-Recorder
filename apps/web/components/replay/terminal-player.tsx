@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { PlaybackControls } from './playback-controls';
 
 interface TerminalPlayerProps {
@@ -21,13 +21,15 @@ export function TerminalPlayer({
   const rafRef = useRef<number | null>(null);
   const prevTimeRef = useRef<number | null>(null);
 
-  const totalChars = terminalLog.length;
+  // Split into lines for line-based playback
+  const lines = useMemo(() => terminalLog.split('\n').filter(Boolean), [terminalLog]);
+  const totalLines = lines.length;
 
-  // Calculate output based on current time position
-  const charIndex = sessionDuration > 0
-    ? Math.min(Math.floor((currentTime / sessionDuration) * totalChars), totalChars)
+  // Map time to line index
+  const lineIndex = sessionDuration > 0
+    ? Math.min(Math.floor((currentTime / sessionDuration) * totalLines), totalLines)
     : 0;
-  const output = terminalLog.slice(0, charIndex);
+  const output = lines.slice(0, lineIndex).join('\n');
 
   // Animation loop
   const tick = useCallback(
@@ -74,7 +76,6 @@ export function TerminalPlayer({
 
   const handlePlayPause = useCallback(() => {
     setIsPlaying((prev) => {
-      // If at end, restart from beginning
       if (!prev && currentTime >= sessionDuration) {
         setCurrentTime(0);
       }
@@ -84,19 +85,18 @@ export function TerminalPlayer({
 
   const handleSeek = useCallback((position: number) => {
     setCurrentTime(position);
-    // If seeking while paused at end, allow play
   }, []);
 
   const handleSpeedChange = useCallback((newSpeed: number) => {
     setSpeed(newSpeed);
   }, []);
 
-  const terminalRef = useRef<HTMLPreElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll terminal output
+  // Auto-scroll
   useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [output]);
 
@@ -104,12 +104,12 @@ export function TerminalPlayer({
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Terminal area */}
       <div
+        ref={scrollRef}
         className="flex-1 overflow-auto p-4"
         style={{ backgroundColor: '#0a0a0a' }}
       >
         {output.length > 0 || isPlaying ? (
           <pre
-            ref={terminalRef}
             className="font-mono text-[12px] leading-[1.6] whitespace-pre-wrap break-words text-[#e0e0e0] m-0"
           >
             {output}

@@ -4,6 +4,23 @@ import path from 'node:path';
 import { homedir } from 'node:os';
 import { execSync } from 'node:child_process';
 
+// Cached git root — only computed once per process
+let _gitRoot: string | null | undefined;
+function getGitRoot(): string | null {
+  if (_gitRoot !== undefined) return _gitRoot;
+  try {
+    _gitRoot = execSync('git rev-parse --show-toplevel', {
+      cwd: process.cwd(),
+      encoding: 'utf-8',
+      timeout: 3000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim() || null;
+  } catch {
+    _gitRoot = null;
+  }
+  return _gitRoot;
+}
+
 export interface SessionMetadata {
   sessionId: string;
   projectPath?: string;
@@ -57,18 +74,7 @@ export async function discoverProjects(): Promise<DiscoveredProject[]> {
   const projects: DiscoveredProject[] = [];
   const seenDirs = new Set<string>();
 
-  // Try to find git root from cwd
-  let gitRoot: string | null = null;
-  try {
-    gitRoot = execSync('git rev-parse --show-toplevel', {
-      cwd: process.cwd(),
-      encoding: 'utf-8',
-      timeout: 3000,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim() || null;
-  } catch {
-    // Not in a git repo, ignore
-  }
+  const gitRoot = getGitRoot();
 
   // Search paths to scan for .aifr directories
   const searchPaths = [

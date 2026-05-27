@@ -2,39 +2,28 @@
 
 > OpenTelemetry for AI Software Development
 
-Record, replay, and analyze AI-assisted software development workflows. AIFR captures AI coding sessions as structured event streams — not chat transcripts, but execution graphs.
+Record, replay, and analyze AI-assisted software development workflows.
 
-## What It Does
+AIFR captures AI coding sessions as structured event streams — not chat transcripts, but execution graphs. Every prompt, command, file change, test result, and retry is recorded as a replayable, auditable timeline.
 
-AIFR records what actually happens when you use AI coding agents:
+## What AIFR Does
 
-- **Prompt → Command → Diff → Test → Retry → Final Patch**
-- Every terminal command, every file change, every test result — captured as an auditable event stream
-- Replay sessions in a web UI with xterm.js terminal playback and diff2html side-by-side diffs
-- Import existing Claude Code and Codex CLI sessions
-- Map AI prompts to the code changes they produced (Prompt-to-Diff)
+When you use an AI coding agent (Claude Code, Codex CLI), a lot happens between your prompt and the final code change. AIFR captures the full picture:
 
-## Status
+- **Prompt** → the instruction you gave the AI
+- **Command** → terminal commands the AI executed
+- **Diff** → files changed and how
+- **Test** → test results (pass/fail)
+- **Retry** → when the AI tried again after a failure
+- **Terminal Output** → raw stdout/stderr from the session
 
-AIFR is in **v0.1** — all core features are implemented and functional:
-
-- Event schema with 8 event types and Zod validation
-- CLI: `init`, `start`, `status`, `import claude/codex`
-- Parsers for Claude Code (`~/.claude/projects/`) and Codex CLI (`~/.codex/sessions/`)
-- Web UI with 5 views: Timeline, Events, Diff, Replay, Prompt-to-Diff
-- Terminal recording via node-pty
-
-See [docs/roadmap.md](docs/roadmap.md) for planned features.
+You can browse this timeline, replay the terminal session, and see which prompt produced which code change.
 
 ## Screenshots
 
 ### Homepage
 
 <img src="docs/screenshots/homepage.png" width="600" alt="AIFR Homepage" />
-
-### Session List
-
-<img src="docs/screenshots/sessions.png" width="700" alt="Session list with sidebar navigation" />
 
 ### Timeline
 
@@ -69,7 +58,7 @@ Imported Codex CLI sessions display correctly with agent identification and comm
 ## Quick Start
 
 ```bash
-# Install
+# Install dependencies
 pnpm install
 
 # Build
@@ -86,80 +75,86 @@ pnpm aifr import claude --limit 10
 pnpm aifr import codex --limit 10
 ```
 
+### Step 1: Initialize
+
+```bash
+pnpm aifr init
+```
+
+Creates a `.aifr/` directory in your project. This is where all session data is stored locally.
+
+### Step 2: Record a Session
+
+```bash
+pnpm aifr start
+```
+
+Opens a terminal recorder. Use your AI coding agent as usual (Claude Code, Codex CLI, etc.). When you exit the terminal, the session is saved automatically.
+
+### Step 3: Import Existing Sessions
+
+If you've already used Claude Code or Codex CLI, AIFR can import past sessions:
+
+```bash
+pnpm aifr import claude          # Import last 10 Claude Code sessions
+pnpm aifr import codex --limit 5 # Import last 5 Codex CLI sessions
+```
+
+Sessions are imported from:
+- Claude Code: `~/.claude/projects/`
+- Codex CLI: `~/.codex/sessions/`
+
+### Step 4: Browse in Web UI
+
+```bash
+pnpm run dev:web
+# Open http://localhost:3000
+```
+
+The Web UI shows all discovered projects and sessions. Click into a session to explore:
+
+| View | What it shows |
+|------|--------------|
+| **Timeline** | All events in chronological order — prompts, commands, diffs, tests, retries |
+| **Prompt-to-Diff** | Maps each AI prompt to the code changes it produced |
+| **Diff** | Side-by-side diff visualization for file changes |
+| **Replay** | Terminal playback with xterm.js — play, pause, change speed |
+| **Events** | Raw event browser with search, filter by type, and JSON detail drawer |
+
 ## CLI Commands
 
 | Command | Description |
 |---------|-------------|
 | `aifr init` | Initialize `.aifr/` in the current project |
-| `aifr start` | Start recording a new session (interactive terminal) |
+| `aifr start` | Start recording a new session (opens a terminal) |
 | `aifr status` | List recorded sessions |
-| `aifr import claude` | Import Claude Code sessions from `~/.claude/projects/` |
-| `aifr import codex` | Import Codex CLI sessions from `~/.codex/sessions/` |
-
-## Web UI
-
-```bash
-cd apps/web
-pnpm dev
-```
-
-Open `http://localhost:3000` to browse projects, sessions, and explore:
-
-- **Timeline** — Chronological view of all events in a session
-- **Prompt-to-Diff** — Map AI prompts to the code changes they produced
-- **Diff View** — Side-by-side diff visualization with diff2html
-- **Replay** — Terminal playback with xterm.js
-- **Events** — Raw event browser with search and JSON detail drawer
-
-## Architecture
-
-```
-aifr/
-├── apps/
-│   ├── cli/              # CLI (Node.js + TypeScript, commander.js)
-│   └── web/              # Web UI (Next.js, Tailwind, shadcn)
-├── packages/
-│   ├── event-schema/     # Unified event types + Zod validation
-│   ├── core/             # Session lifecycle, JSONL writer, Git capture, PTY recorder
-│   ├── parser-claude/    # Parse ~/.claude/projects/ JSONL sessions
-│   └── parser-codex/     # Parse ~/.codex/sessions/ JSONL sessions
-├── docs/
-│   ├── architecture.md
-│   ├── session-format.md
-│   ├── roadmap.md
-│   └── known-limitations.md
-└── scripts/
-    ├── install.sh        # Unix installer
-    └── install.ps1       # Windows installer
-```
-
-### Event Schema
-
-8 normalized event types:
-
-`PromptEvent` · `CommandEvent` · `DiffEvent` · `ToolEvent` · `TestEvent` · `SessionEvent` · `TerminalOutputEvent` · `RetryEvent`
-
-All events are append-only JSONL with schema versioning. See [docs/session-format.md](docs/session-format.md).
-
-### Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| CLI | Node.js, TypeScript, commander.js, node-pty |
-| Web | Next.js 14, Tailwind CSS, shadcn/ui |
-| Replay | xterm.js |
-| Diff | diff2html |
-| Validation | Zod v4 |
-| Git | simple-git |
-| Build | tsup, pnpm workspaces |
+| `aifr import claude` | Import Claude Code sessions |
+| `aifr import codex` | Import Codex CLI sessions |
 
 ## Supported AI Agents
 
 | Agent | Import | Live Recording |
 |-------|--------|----------------|
-| Claude Code | ✅ `~/.claude/projects/` | ✅ via PTY |
-| Codex CLI | ✅ `~/.codex/sessions/` | ✅ via PTY |
-| Cursor | 🔜 | 🔜 |
+| Claude Code | Yes | Yes |
+| Codex CLI | Yes | Yes |
+| Cursor | Planned | Planned |
+
+## Data Storage
+
+All data stays on your machine. Sessions are stored in `.aifr/sessions/`:
+
+```
+.aifr/sessions/
+  20260526_120011/
+    events.jsonl          # Structured event stream
+    terminal.log          # Raw terminal output
+    metadata.json         # Session info (timestamps, agent, git ref)
+    git/
+      before.patch        # Git diff at session start
+      after.patch         # Git diff at session end
+```
+
+No data is uploaded anywhere. No cloud sync. No telemetry.
 
 ## Development
 
@@ -170,17 +165,14 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Type-check all packages
+# Type-check
 pnpm typecheck
 
-# Run tests
-pnpm test
-
-# Run CLI in dev mode
+# Run CLI
 pnpm aifr <command>
 
 # Start web UI
-cd apps/web && pnpm dev
+pnpm run dev:web
 ```
 
 ## Known Limitations
@@ -188,8 +180,13 @@ cd apps/web && pnpm dev
 - Imported sessions have no structured diff events or git patches
 - Codex sessions contain commands but no user prompts in the event stream
 - Replay playback is based on terminal log output, not structured timing data
+- Prompt-to-Diff mapping is inferred, not guaranteed to be exact
 
 See [docs/known-limitations.md](docs/known-limitations.md) for details.
+
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for planned features including Cursor support, SQLite search, and more.
 
 ## License
 

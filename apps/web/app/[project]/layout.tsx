@@ -8,7 +8,8 @@ export default async function ProjectLayout({
   children: React.ReactNode;
   params: Promise<{ project: string }>;
 }) {
-  const { project } = await params;
+  const { project: rawProject } = await params;
+  const project = decodeURIComponent(rawProject);
   const projects = await discoverProjects();
   const projectInfo = projects.find(p => p.name === project);
   const sessions = projectInfo ? await discoverSessions(projectInfo.dir) : [];
