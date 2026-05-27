@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { resolveSessionDir } from '@/lib/project-resolver';
 import { readEventsFile } from '@/lib/jsonl-reader';
-import type { AIFREvent, SessionEvent } from '@aifr/event-schema';
+import type { AIFREvent, SessionEvent, PromptEvent, CommandEvent, ToolEvent, DiffEvent, TestEvent } from '@aifr/event-schema';
 import ReplayClient from './client';
 
 const MARKER_TYPES = new Set(['prompt', 'diff', 'test', 'retry']);
@@ -13,33 +13,32 @@ function buildEventLog(events: AIFREvent[]): string {
     const ts = new Date(e.timestamp).toLocaleTimeString();
     switch (e.type) {
       case 'prompt': {
-        const role = 'role' in e ? (e as { role?: string }).role : '';
-        const content = 'content' in e ? String((e as { content?: string }).content ?? '') : '';
-        if (role === 'user') {
-          lines.push(`[${ts}] > ${content.slice(0, 200)}`);
-        } else if (role === 'assistant') {
-          lines.push(`[${ts}] ${content.slice(0, 200)}`);
+        const p = e as PromptEvent;
+        if (p.role === 'user') {
+          lines.push(`[${ts}] > ${p.content.slice(0, 200)}`);
+        } else if (p.role === 'assistant') {
+          lines.push(`[${ts}] ${p.content.slice(0, 200)}`);
         }
         break;
       }
       case 'command': {
-        const cmd = 'command' in e ? String((e as { command?: string }).command ?? '') : '';
-        lines.push(`[${ts}] $ ${cmd}`);
+        const c = e as CommandEvent;
+        lines.push(`[${ts}] $ ${c.command}`);
         break;
       }
       case 'tool': {
-        const name = 'toolName' in e ? String((e as { toolName?: string }).toolName ?? '') : 'tool';
-        lines.push(`[${ts}] [tool] ${name}`);
+        const t = e as ToolEvent;
+        lines.push(`[${ts}] [tool] ${t.name}`);
         break;
       }
       case 'diff': {
-        const files = 'files' in e ? (e as unknown as { files?: unknown[] }).files ?? [] : [];
-        lines.push(`[${ts}] [diff] ${files.length} file(s) changed`);
+        const d = e as DiffEvent;
+        lines.push(`[${ts}] [diff] ${d.files.length} file(s) changed`);
         break;
       }
       case 'test': {
-        const passed = 'passed' in e ? (e as { passed?: boolean }).passed : undefined;
-        lines.push(`[${ts}] [test] ${passed === true ? 'PASS' : passed === false ? 'FAIL' : 'result'}`);
+        const t = e as TestEvent;
+        lines.push(`[${ts}] [test] ${t.outcome.toUpperCase()}`);
         break;
       }
       case 'retry': {
@@ -88,10 +87,13 @@ export default async function ReplayPage({
   }
 
   // Build a mapping from raw timestamp to active timeline position
+  // (use first occurrence for duplicate timestamps)
   const tsToActive = new Map<number, number>();
   let cumulative = 0;
   for (let i = 0; i < sortedTs.length; i++) {
-    tsToActive.set(sortedTs[i], cumulative);
+    if (!tsToActive.has(sortedTs[i])) {
+      tsToActive.set(sortedTs[i], cumulative);
+    }
     if (i < sortedTs.length - 1) {
       cumulative += Math.min(sortedTs[i + 1] - sortedTs[i], MAX_GAP);
     }

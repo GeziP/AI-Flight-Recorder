@@ -7,10 +7,9 @@ const sessionCache = new Map<string, string>();
  * Resolve a project name to its .aifr directory.
  */
 export async function resolveProjectDir(projectName: string): Promise<string | null> {
-  const decoded = decodeURIComponent(projectName);
-  if (projectCache.has(decoded)) return projectCache.get(decoded)!;
+  if (projectCache.has(projectName)) return projectCache.get(projectName)!;
   const projects = await discoverProjects();
-  const project = projects.find(p => p.name === decoded);
+  const project = projects.find(p => p.name === projectName);
   if (project) {
     projectCache.set(projectName, project.dir);
     return project.dir;
