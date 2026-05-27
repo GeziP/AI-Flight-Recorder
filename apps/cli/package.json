@@ -1,5 +1,5 @@
 {
-  "name": "aifr",
+  "name": "@gezip/aifr",
   "version": "0.1.0",
   "description": "AI Flight Recorder — OpenTelemetry for AI Software Development",
   "license": "MIT",
@@ -46,6 +46,7 @@
     "url": "https://github.com/GeziP/AI-Flight-Recorder/issues"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "dependencies": {

@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "pnpm -r --filter '!@aifr/web' build && pnpm --filter @aifr/web build && node scripts/pack-web.mjs",
-    "build:cli": "pnpm --filter @aifr/event-schema build && pnpm --filter @aifr/core build && pnpm --filter @aifr/parser-claude build && pnpm --filter @aifr/parser-codex build && pnpm --filter aifr build",
+    "build:cli": "pnpm --filter @aifr/event-schema build && pnpm --filter @aifr/core build && pnpm --filter @aifr/parser-claude build && pnpm --filter @aifr/parser-codex build && pnpm --filter @gezip/aifr build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r typecheck",
