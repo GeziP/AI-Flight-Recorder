@@ -14,7 +14,7 @@ import {
 } from '@aifr/event-schema';
 import { EventWriter } from './event-writer.js';
 import { writeMetadata, type SessionMetadata } from './metadata.js';
-import { captureGitBaseline, captureDiffToFile, getDiffStat } from './git.js';
+import { captureGitBaseline, captureDiffToFile, getDiffStat, findGitRoot } from './git.js';
 
 export interface SessionOptions {
   projectPath: string;
@@ -210,10 +210,21 @@ export class Session {
   }
 
   static async findAifrDir(projectPath: string): Promise<string | null> {
+    // Check the given path first
     const aifrDir = path.join(projectPath, '.aifr');
     if (existsSync(aifrDir)) {
       return aifrDir;
     }
+
+    // Walk up to git root and check there
+    const gitRoot = await findGitRoot(projectPath);
+    if (gitRoot && path.resolve(gitRoot) !== path.resolve(projectPath)) {
+      const rootAifrDir = path.join(gitRoot, '.aifr');
+      if (existsSync(rootAifrDir)) {
+        return rootAifrDir;
+      }
+    }
+
     return null;
   }
 

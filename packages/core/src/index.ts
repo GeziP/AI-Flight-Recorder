@@ -4,6 +4,7 @@ export { writeMetadata, readMetadata, type SessionMetadata } from './metadata.js
 export {
   captureGitBaseline,
   isGitRepo,
+  findGitRoot,
   getFullDiff,
   getDiffStat,
   captureDiffToFile,

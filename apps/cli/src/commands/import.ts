@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import path from 'node:path';
 import { writeFile, mkdir } from 'node:fs/promises';
-import { Session, type SessionInfo } from '@aifr/core';
+import { findGitRoot } from '@aifr/core';
 import { success, info, warn, error, header } from '../lib/output.js';
 
 const colors = {
@@ -25,13 +25,24 @@ export function importCommand(program: Command): Command {
 
       const limit = parseInt(options.limit, 10) || 10;
 
+      // Default output resolves relative to git root so sessions land in the
+      // right place when run from a subdirectory. Explicit --output paths
+      // resolve relative to cwd to respect user intent.
+      const isDefaultOutput = options.output === '.aifr/sessions';
+      const baseDir = isDefaultOutput
+        ? (await findGitRoot(process.cwd())) ?? process.cwd()
+        : process.cwd();
+      const outputDir = path.isAbsolute(options.output)
+        ? options.output
+        : path.resolve(baseDir, options.output);
+
       header(`AIFR Import ${agent === 'claude' ? 'Claude Code' : 'Codex CLI'}`);
 
       try {
         if (agent === 'claude') {
-          await importClaudeSessions(options.output, limit);
+          await importClaudeSessions(outputDir, limit);
         } else {
-          await importCodexSessions(options.output, limit);
+          await importCodexSessions(outputDir, limit);
         }
       } catch (err) {
         error(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
