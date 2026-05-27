@@ -4,7 +4,7 @@
 
 - **Local only** — All data stays on disk. No cloud sync, sharing, or collaboration features.
 - **No search** — No full-text search across sessions (planned for v0.2 with SQLite FTS).
-- **No secret redaction** — Terminal output, prompts, and diffs may contain API keys, tokens, or passwords. Users must review before sharing.
+- **No secret redaction** — Terminal output (`terminal.log`), prompts, command arguments, and diffs may contain API keys, tokens, passwords, or other sensitive data. The Web UI renders these as-is. Review session contents before sharing or exporting `.aifr/` directories.
 
 ## CLI
 

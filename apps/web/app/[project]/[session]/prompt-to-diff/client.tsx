@@ -73,6 +73,15 @@ export default function PromptToDiffClient({ events }: PromptToDiffClientProps) 
 
             {/* Related changes */}
             <RelatedChanges diffs={mapping.relatedDiffs} />
+
+            {/* Confidence notice */}
+            <div className="flex items-start gap-2 text-[11px] text-text-muted mt-2 px-1">
+              <span className="shrink-0 mt-px">ℹ</span>
+              <span>
+                Mappings are based on temporal proximity and are <strong>likely related changes</strong>,
+                not provenance-tracked attributions. Verify before relying on them.
+              </span>
+            </div>
           </>
         ) : (
           <div className="flex items-center justify-center h-32 text-text-muted text-[13px]">
