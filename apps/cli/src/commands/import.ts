@@ -25,9 +25,13 @@ export function importCommand(program: Command): Command {
 
       const limit = parseInt(options.limit, 10) || 10;
 
-      // Resolve output directory relative to git root, not cwd
-      const gitRoot = await findGitRoot(process.cwd());
-      const baseDir = gitRoot ?? process.cwd();
+      // Default output resolves relative to git root so sessions land in the
+      // right place when run from a subdirectory. Explicit --output paths
+      // resolve relative to cwd to respect user intent.
+      const isDefaultOutput = options.output === '.aifr/sessions';
+      const baseDir = isDefaultOutput
+        ? (await findGitRoot(process.cwd())) ?? process.cwd()
+        : process.cwd();
       const outputDir = path.isAbsolute(options.output)
         ? options.output
         : path.resolve(baseDir, options.output);
