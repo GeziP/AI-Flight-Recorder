@@ -25,11 +25,14 @@ export function TerminalPlayer({
   const lines = useMemo(() => terminalLog.split('\n').filter(Boolean), [terminalLog]);
   const totalLines = lines.length;
 
-  // Map time to line index
-  const lineIndex = sessionDuration > 0
-    ? Math.min(Math.floor((currentTime / sessionDuration) * totalLines), totalLines)
-    : 0;
-  const output = lines.slice(0, lineIndex).join('\n');
+  // Map time to line index, memoized to avoid recalc on every frame
+  const lineIndex = useMemo(() => {
+    return sessionDuration > 0
+      ? Math.min(Math.floor((currentTime / sessionDuration) * totalLines), totalLines)
+      : 0;
+  }, [currentTime, sessionDuration, totalLines]);
+
+  const output = useMemo(() => lines.slice(0, lineIndex).join('\n'), [lines, lineIndex]);
 
   // Animation loop
   const tick = useCallback(
@@ -93,7 +96,7 @@ export function TerminalPlayer({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll
+  // Auto-scroll: ref on the div with overflow-auto, not on <pre>
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
