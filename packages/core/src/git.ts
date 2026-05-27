@@ -50,6 +50,20 @@ export async function isGitRepo(dirPath: string): Promise<boolean> {
 }
 
 /**
+ * Find the git repository root by walking up from the given directory.
+ * Returns the absolute path of the repo root, or null if not inside a git repo.
+ */
+export async function findGitRoot(startDir: string): Promise<string | null> {
+  try {
+    const git = simpleGit(startDir);
+    const root = await git.revparse('--show-toplevel');
+    return root.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get unified diff string for all changes in the repo.
  */
 export async function getFullDiff(repoPath: string): Promise<string> {

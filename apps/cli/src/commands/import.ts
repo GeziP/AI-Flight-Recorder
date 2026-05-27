@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import path from 'node:path';
 import { writeFile, mkdir } from 'node:fs/promises';
-import { Session, type SessionInfo } from '@aifr/core';
+import { findGitRoot } from '@aifr/core';
 import { success, info, warn, error, header } from '../lib/output.js';
 
 const colors = {
@@ -25,13 +25,20 @@ export function importCommand(program: Command): Command {
 
       const limit = parseInt(options.limit, 10) || 10;
 
+      // Resolve output directory relative to git root, not cwd
+      const gitRoot = await findGitRoot(process.cwd());
+      const baseDir = gitRoot ?? process.cwd();
+      const outputDir = path.isAbsolute(options.output)
+        ? options.output
+        : path.resolve(baseDir, options.output);
+
       header(`AIFR Import ${agent === 'claude' ? 'Claude Code' : 'Codex CLI'}`);
 
       try {
         if (agent === 'claude') {
-          await importClaudeSessions(options.output, limit);
+          await importClaudeSessions(outputDir, limit);
         } else {
-          await importCodexSessions(options.output, limit);
+          await importCodexSessions(outputDir, limit);
         }
       } catch (err) {
         error(`Import failed: ${err instanceof Error ? err.message : String(err)}`);

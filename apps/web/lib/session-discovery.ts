@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { homedir } from 'node:os';
+import { execSync } from 'node:child_process';
 
 export interface SessionMetadata {
   sessionId: string;
@@ -56,9 +57,24 @@ export async function discoverProjects(): Promise<DiscoveredProject[]> {
   const projects: DiscoveredProject[] = [];
   const seenDirs = new Set<string>();
 
+  // Try to find git root from cwd
+  let gitRoot: string | null = null;
+  try {
+    gitRoot = execSync('git rev-parse --show-toplevel', {
+      cwd: process.cwd(),
+      encoding: 'utf-8',
+      timeout: 3000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim() || null;
+  } catch {
+    // Not in a git repo, ignore
+  }
+
   // Search paths to scan for .aifr directories
   const searchPaths = [
     process.cwd(),
+    ...(gitRoot && path.resolve(gitRoot) !== path.resolve(process.cwd()) ? [gitRoot] : []),
+    homedir(),
     path.join(homedir(), 'projects'),
     path.join(homedir(), 'code'),
     path.join(homedir(), 'dev'),
@@ -73,9 +89,10 @@ export async function discoverProjects(): Promise<DiscoveredProject[]> {
 
     try {
       // Check if searchPath itself has .aifr
+      const resolvedSearch = path.resolve(searchPath);
       const aifrDir = path.join(searchPath, '.aifr');
-      if (existsSync(aifrDir) && !seenDirs.has(searchPath)) {
-        seenDirs.add(searchPath);
+      if (existsSync(aifrDir) && !seenDirs.has(resolvedSearch)) {
+        seenDirs.add(resolvedSearch);
         const sessions = await discoverSessions(aifrDir);
         if (sessions.length > 0) {
           projects.push({
@@ -98,9 +115,10 @@ export async function discoverProjects(): Promise<DiscoveredProject[]> {
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
         const subDir = path.join(searchPath, entry.name);
+        const resolvedSub = path.resolve(subDir);
         const aifrSubDir = path.join(subDir, '.aifr');
-        if (existsSync(aifrSubDir) && !seenDirs.has(subDir)) {
-          seenDirs.add(subDir);
+        if (existsSync(aifrSubDir) && !seenDirs.has(resolvedSub)) {
+          seenDirs.add(resolvedSub);
           const sessions = await discoverSessions(aifrSubDir);
           if (sessions.length > 0) {
             projects.push({
