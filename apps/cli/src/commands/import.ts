@@ -14,8 +14,8 @@ export function importCommand(program: Command): Command {
     .command('import <agent>')
     .description('Import sessions from an AI agent (claude, codex)')
     .option('-o, --output <dir>', 'Output directory for imported sessions', '.aifr/sessions')
-    .option('-l, --limit <n>', 'Maximum number of sessions to import', '10')
-    .action(async (agent: string, options: { output: string; limit: string }) => {
+    .option('-l, --limit <n>', 'Maximum number of sessions to import')
+    .action(async (agent: string, options: { output: string; limit?: string }) => {
       const validAgents = ['claude', 'codex'];
       if (!validAgents.includes(agent)) {
         error(`Invalid agent: ${agent}. Must be one of: ${validAgents.join(', ')}`);
@@ -23,7 +23,7 @@ export function importCommand(program: Command): Command {
         return;
       }
 
-      const limit = parseInt(options.limit, 10) || 10;
+      const limit = options.limit ? parseInt(options.limit, 10) : Infinity;
 
       // Default output resolves relative to git root so sessions land in the
       // right place when run from a subdirectory. Explicit --output paths
