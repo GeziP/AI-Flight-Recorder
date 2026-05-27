@@ -4,6 +4,7 @@ import { initCommand } from './commands/init.js';
 import { startCommand } from './commands/start.js';
 import { statusCommand } from './commands/status.js';
 import { importCommand } from './commands/import.js';
+import { uiCommand } from './commands/ui.js';
 
 const program = new Command();
 
@@ -16,6 +17,7 @@ initCommand(program);
 startCommand(program);
 statusCommand(program);
 importCommand(program);
+uiCommand(program);
 
 program.parse(process.argv);
 

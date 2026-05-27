@@ -24,8 +24,10 @@
   },
   "dependencies": {
     "@aifr/event-schema": "workspace:^",
-    "node-pty": "catalog:",
     "simple-git": "catalog:"
+  },
+  "optionalDependencies": {
+    "node-pty": "catalog:"
   },
   "devDependencies": {
     "tsup": "catalog:",
