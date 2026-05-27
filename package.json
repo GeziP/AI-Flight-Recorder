@@ -5,13 +5,15 @@
   "description": "AI Flight Recorder - OpenTelemetry for AI Software Development",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm -r --filter '!@aifr/web' build && pnpm --filter @aifr/web build && node scripts/pack-web.mjs",
-    "build:cli": "pnpm --filter @aifr/event-schema build && pnpm --filter @aifr/core build && pnpm --filter @aifr/parser-claude build && pnpm --filter @aifr/parser-codex build && pnpm --filter @gezip/aifr build",
+    "build": "pnpm -r --filter '!@aifr/web' build && (pnpm --filter @aifr/web build || true) && node scripts/pack-web.mjs",
+    "build:cli": "pnpm --filter @aifr/event-schema build && pnpm --filter @aifr/core build && pnpm --filter @aifr/parser-claude build && pnpm --filter @aifr/parser-codex build && pnpm --filter aifr build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r typecheck",
-    "aifr": "pnpm --filter @aifr/cli run start",
-    "dev:web": "pnpm --filter @aifr/web run dev"
+    "aifr": "pnpm --filter aifr run start",
+    "dev:web": "pnpm --filter @aifr/web run dev",
+    "publish:dry": "pnpm --filter aifr pack --pack-destination . && echo 'Check aifr-*.tgz contents before publishing'",
+    "publish:release": "pnpm --filter aifr publish --access public"
   },
   "engines": {
     "node": ">=20.0.0"

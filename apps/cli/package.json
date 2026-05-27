@@ -1,6 +1,6 @@
 {
-  "name": "@gezip/aifr",
-  "version": "0.1.1",
+  "name": "aifr",
+  "version": "0.1.2",
   "description": "AI Flight Recorder — OpenTelemetry for AI Software Development",
   "license": "MIT",
   "type": "module",
@@ -16,7 +16,8 @@
   "files": [
     "bin.js",
     "dist/index.cjs",
-    "dist/index.js"
+    "dist/index.js",
+    "dist/web"
   ],
   "scripts": {
     "build": "tsup",
@@ -46,7 +47,6 @@
     "url": "https://github.com/GeziP/AI-Flight-Recorder/issues"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "dependencies": {
@@ -54,7 +54,10 @@
     "@aifr/event-schema": "workspace:^",
     "@aifr/parser-claude": "workspace:^",
     "@aifr/parser-codex": "workspace:^",
-    "commander": "catalog:"
+    "commander": "catalog:",
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
   },
   "optionalDependencies": {
     "node-pty": "catalog:"
