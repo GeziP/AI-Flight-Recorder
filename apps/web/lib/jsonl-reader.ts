@@ -27,7 +27,7 @@ export function parseJSONLContent(content: string): ParseResult {
       errors.push({
         line: i + 1,
         content: `[omitted — ${line.length} chars]`,
-        error: err instanceof Error ? err.message : String(err),
+        error: `JSON parse error at line ${i + 1}`,
       });
     }
   }
