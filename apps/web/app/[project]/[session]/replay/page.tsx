@@ -2,58 +2,11 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { resolveSessionDir } from '@/lib/project-resolver';
 import { readEventsFile } from '@/lib/jsonl-reader';
-import type { AIFREvent, SessionEvent, PromptEvent, CommandEvent, ToolEvent, DiffEvent, TestEvent } from '@aifr/event-schema';
+import { buildEventLog } from '@/lib/event-log-builder';
+import type { AIFREvent, SessionEvent } from '@aifr/event-schema';
 import ReplayClient from './client';
 
 const MARKER_TYPES = new Set(['prompt', 'diff', 'test', 'retry']);
-
-function buildEventLog(events: AIFREvent[]): string {
-  const lines: string[] = [];
-  for (const e of events) {
-    const ts = new Date(e.timestamp).toLocaleTimeString();
-    switch (e.type) {
-      case 'prompt': {
-        const p = e as PromptEvent;
-        if (p.role === 'user') {
-          lines.push(`[${ts}] > ${p.content.slice(0, 200)}`);
-        } else if (p.role === 'assistant') {
-          lines.push(`[${ts}] ${p.content.slice(0, 200)}`);
-        }
-        break;
-      }
-      case 'command': {
-        const c = e as CommandEvent;
-        lines.push(`[${ts}] $ ${c.command}`);
-        break;
-      }
-      case 'tool': {
-        const t = e as ToolEvent;
-        lines.push(`[${ts}] [tool] ${t.name}`);
-        break;
-      }
-      case 'diff': {
-        const d = e as DiffEvent;
-        lines.push(`[${ts}] [diff] ${d.files.length} file(s) changed`);
-        break;
-      }
-      case 'test': {
-        const t = e as TestEvent;
-        lines.push(`[${ts}] [test] ${t.outcome.toUpperCase()}`);
-        break;
-      }
-      case 'retry': {
-        lines.push(`[${ts}] [retry]`);
-        break;
-      }
-      case 'session': {
-        const sub = 'subtype' in e ? String((e as { subtype?: string }).subtype ?? '') : '';
-        lines.push(`[${ts}] === session ${sub} ===`);
-        break;
-      }
-    }
-  }
-  return lines.join('\n') + '\n';
-}
 
 export default async function ReplayPage({
   params,

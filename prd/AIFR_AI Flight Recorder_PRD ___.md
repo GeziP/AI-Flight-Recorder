@@ -565,7 +565,7 @@ Phase 6: npm Publishing & One-Click Install（3–4 天）
   * `node-pty` 标记为 `optionalDependencies`，install 失败时 `aifr start` 降级为无终端录制模式，其余命令正常工作。
   * 使用 `tsup` 将 CLI 编译为单文件 CJS + ESM 双格式输出。
 
-Phase 7: VS Code Extension（v0.2，7–10 天）
+Phase 7: VS Code Extension（v0.2，10–14 天）
 
 * Key Deliverables:
   * 发布 VS Code 扩展 `aifr-vscode`，在侧栏显示项目 session 列表。
@@ -574,6 +574,7 @@ Phase 7: VS Code Extension（v0.2，7–10 天）
   * 点击 session 自动启动内置 replay，无需外部浏览器。
   * 提供快捷命令：`AIFR: Import Session`、`AIFR: Open Timeline`、`AIFR: Start Recording`。
   * VS Code Marketplace 发布，支持一键安装。
+  * 建议拆分为 v0.2.0（基本侧栏 + session 列表）和 v0.2.1（深度集成：diff 跳转、patch 解析）。
 * Dependencies:
   * Phase 6 npm 发布完成，CLI 可作为 dependency 被 extension 调用。
   * Web UI 组件可独立打包为 Webview 消费的 JS bundle。
