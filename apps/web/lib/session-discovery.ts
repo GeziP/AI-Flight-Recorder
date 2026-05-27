@@ -79,9 +79,6 @@ export async function discoverProjects(): Promise<DiscoveredProject[]> {
     path.join(homedir(), 'code'),
     path.join(homedir(), 'dev'),
     path.join(homedir(), 'src'),
-    // Common Windows paths
-    'D:\\gezi',
-    'E:\\gezi',
   ];
 
   for (const searchPath of searchPaths) {
