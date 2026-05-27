@@ -77,15 +77,33 @@ export default async function ReplayPage({
 
   const startTime = startEvent?.timestamp ?? 0;
   const endTime = endEvent?.timestamp ?? 0;
-  const sessionDuration = endTime > startTime ? endTime - startTime : 0;
+
+  // Compute active duration: sum of gaps between consecutive events,
+  // capping individual gaps at MAX_GAP to skip long idle periods.
+  const MAX_GAP = 3 * 60 * 1000; // 3 minutes — compress longer idle periods
+  const sortedTs = events.map((e) => e.timestamp).sort((a, b) => a - b);
+  let activeDuration = sortedTs.length > 0 ? 1000 : 0; // small buffer for first event
+  for (let i = 1; i < sortedTs.length; i++) {
+    activeDuration += Math.min(sortedTs[i] - sortedTs[i - 1], MAX_GAP);
+  }
+
+  // Build a mapping from raw timestamp to active timeline position
+  const tsToActive = new Map<number, number>();
+  let cumulative = 0;
+  for (let i = 0; i < sortedTs.length; i++) {
+    tsToActive.set(sortedTs[i], cumulative);
+    if (i < sortedTs.length - 1) {
+      cumulative += Math.min(sortedTs[i + 1] - sortedTs[i], MAX_GAP);
+    }
+  }
 
   const eventMarkers = events
     .filter((e) => MARKER_TYPES.has(e.type))
     .map((e) => ({
-      position: e.timestamp - startTime,
+      position: tsToActive.get(e.timestamp) ?? 0,
       type: e.type,
     }))
-    .filter((m) => m.position >= 0 && m.position <= sessionDuration);
+    .filter((m) => m.position >= 0 && m.position <= activeDuration);
 
   let terminalLog = '';
   try {
@@ -100,7 +118,7 @@ export default async function ReplayPage({
   return (
     <ReplayClient
       terminalLog={eventLog}
-      sessionDuration={sessionDuration}
+      sessionDuration={activeDuration}
       eventMarkers={eventMarkers}
     />
   );
