@@ -91,12 +91,12 @@ export function TerminalPlayer({
     setSpeed(newSpeed);
   }, []);
 
-  const terminalRef = useRef<HTMLPreElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll
   useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [output]);
 
@@ -104,12 +104,12 @@ export function TerminalPlayer({
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Terminal area */}
       <div
+        ref={scrollRef}
         className="flex-1 overflow-auto p-4"
         style={{ backgroundColor: '#0a0a0a' }}
       >
         {output.length > 0 || isPlaying ? (
           <pre
-            ref={terminalRef}
             className="font-mono text-[12px] leading-[1.6] whitespace-pre-wrap break-words text-[#e0e0e0] m-0"
           >
             {output}

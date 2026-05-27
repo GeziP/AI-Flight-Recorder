@@ -9,7 +9,8 @@ export default async function TimelinePage({
 }: {
   params: Promise<{ project: string; session: string }>;
 }) {
-  const { project, session: sessionName } = await params;
+  const { project: rawProject, session: sessionName } = await params;
+  const project = decodeURIComponent(rawProject);
   const projects = await discoverProjects();
   const projectInfo = projects.find(p => p.name === project);
   const aifrDir = projectInfo?.dir;
