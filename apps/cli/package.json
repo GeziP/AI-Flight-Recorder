@@ -15,7 +15,8 @@
   },
   "files": [
     "bin.js",
-    "dist"
+    "dist/index.cjs",
+    "dist/index.js"
   ],
   "scripts": {
     "build": "tsup",
