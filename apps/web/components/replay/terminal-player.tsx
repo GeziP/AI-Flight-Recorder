@@ -21,8 +21,11 @@ export function TerminalPlayer({
   const rafRef = useRef<number | null>(null);
   const prevTimeRef = useRef<number | null>(null);
 
-  // Split into lines for line-based playback
-  const lines = useMemo(() => terminalLog.split('\n').filter(Boolean), [terminalLog]);
+  // Split into lines, preserving blank lines; strip only trailing empty entry from final \n
+  const lines = useMemo(() => {
+    const split = terminalLog.split('\n');
+    return split.length > 1 && split[split.length - 1] === '' ? split.slice(0, -1) : split;
+  }, [terminalLog]);
   const totalLines = lines.length;
 
   // Map time to line index, memoized to avoid recalc on every frame
@@ -32,7 +35,16 @@ export function TerminalPlayer({
       : 0;
   }, [currentTime, sessionDuration, totalLines]);
 
-  const output = useMemo(() => lines.slice(0, lineIndex).join('\n'), [lines, lineIndex]);
+  // Fallback: for single-line logs, use char-based progress within the line
+  const output = useMemo(() => {
+    if (totalLines <= 1) {
+      const charIndex = sessionDuration > 0
+        ? Math.min(Math.floor((currentTime / sessionDuration) * terminalLog.length), terminalLog.length)
+        : 0;
+      return terminalLog.slice(0, charIndex);
+    }
+    return lines.slice(0, lineIndex).join('\n');
+  }, [lines, lineIndex, totalLines, terminalLog, currentTime, sessionDuration]);
 
   // Animation loop
   const tick = useCallback(

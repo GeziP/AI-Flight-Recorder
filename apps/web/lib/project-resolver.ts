@@ -3,23 +3,24 @@ import { discoverProjects, discoverSessions } from './session-discovery';
 const projectCache = new Map<string, string>();
 const sessionCache = new Map<string, string>();
 
-const UNSAFE = /\.\.|[\0]/;
+// Match `..` as a path segment (delimited by / or \ or at string boundaries)
+const PATH_TRAVERSAL = /(^|[\/\\])\.\.([\/\\]|$)/;
 
-/**
- * Validate that a name segment doesn't contain path traversal characters.
- * Defense-in-depth: the resolver also uses whitelist matching,
- * but explicit rejection prevents future regressions if code changes to path concatenation.
- */
-function assertSafeSegment(name: string, label: string): string | null {
-  if (!name || UNSAFE.test(name)) return null;
-  return name;
+function safeDecode(raw: string): string | null {
+  try {
+    const decoded = decodeURIComponent(raw);
+    if (!decoded || PATH_TRAVERSAL.test(decoded) || decoded.includes('\0')) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
 }
 
 /**
  * Resolve a URL-encoded project name to its .aifr directory.
  */
 export async function resolveProjectDir(rawProjectName: string): Promise<string | null> {
-  const projectName = assertSafeSegment(decodeURIComponent(rawProjectName), 'project');
+  const projectName = safeDecode(rawProjectName);
   if (!projectName) return null;
 
   if (projectCache.has(projectName)) return projectCache.get(projectName)!;
@@ -36,8 +37,8 @@ export async function resolveProjectDir(rawProjectName: string): Promise<string 
  * Resolve URL-encoded project+session to the session directory path.
  */
 export async function resolveSessionDir(rawProjectName: string, rawSessionName: string): Promise<string | null> {
-  const projectName = assertSafeSegment(decodeURIComponent(rawProjectName), 'project');
-  const sessionName = assertSafeSegment(decodeURIComponent(rawSessionName), 'session');
+  const projectName = safeDecode(rawProjectName);
+  const sessionName = safeDecode(rawSessionName);
   if (!projectName || !sessionName) return null;
 
   const cacheKey = `${projectName}/${sessionName}`;

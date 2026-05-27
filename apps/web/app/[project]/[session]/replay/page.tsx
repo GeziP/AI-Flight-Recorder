@@ -14,7 +14,7 @@ export default async function ReplayPage({
   params: Promise<{ project: string; session: string }>;
 }) {
   const { project, session } = await params;
-  const sessionDir = await resolveSessionDir(decodeURIComponent(project), session);
+  const sessionDir = await resolveSessionDir(project, session);
   if (!sessionDir) return <div className="p-8 text-text-muted">Session not found.</div>;
 
   const eventsResult = await readEventsFile(path.join(sessionDir, 'events.jsonl'));
