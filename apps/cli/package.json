@@ -1,11 +1,22 @@
 {
-  "name": "@aifr/cli",
+  "name": "aifr",
   "version": "0.1.0",
-  "private": true,
+  "description": "AI Flight Recorder — OpenTelemetry for AI Software Development",
+  "license": "MIT",
   "type": "module",
   "bin": {
-    "aifr": "./dist/index.js"
+    "aifr": "bin.js"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "bin.js",
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/index.ts",
@@ -15,12 +26,36 @@
     "test:watch": "vitest",
     "lint": "echo 'no lint yet'"
   },
+  "keywords": [
+    "ai",
+    "coding",
+    "claude",
+    "codex",
+    "recorder",
+    "replay",
+    "observability",
+    "developer-tools"
+  ],
+  "homepage": "https://github.com/GeziP/AI-Flight-Recorder#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeziP/AI-Flight-Recorder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GeziP/AI-Flight-Recorder/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@aifr/core": "workspace:^",
     "@aifr/event-schema": "workspace:^",
     "@aifr/parser-claude": "workspace:^",
     "@aifr/parser-codex": "workspace:^",
     "commander": "catalog:"
+  },
+  "optionalDependencies": {
+    "node-pty": "catalog:"
   },
   "devDependencies": {
     "tsup": "catalog:",

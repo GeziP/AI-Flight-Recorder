@@ -1,4 +1,3 @@
-import { type IPty, spawn } from 'node-pty';
 import { createWriteStream, type WriteStream } from 'node:fs';
 import path from 'node:path';
 import { Session, type SessionInfo } from './session.js';
@@ -20,7 +19,7 @@ export interface TerminalRecorderOptions {
  * Spawns an interactive shell, forwards I/O, and records everything.
  */
 export class TerminalRecorder {
-  private pty: IPty | null = null;
+  private pty: any = null;
   private logStream: WriteStream | null = null;
   private sequenceNumber = 0;
   private buffer = '';
@@ -38,11 +37,22 @@ export class TerminalRecorder {
    * Start the PTY session. Blocks until the shell exits.
    */
   async run(): Promise<number> {
+    let ptyModule: typeof import('node-pty') | null = null;
+    try {
+      ptyModule = await import('node-pty');
+    } catch {
+      throw new Error(
+        'node-pty is not installed. Terminal recording requires node-pty.\n' +
+        'Install it with: npm install node-pty\n' +
+        'Or use "aifr import" to import existing sessions without recording.'
+      );
+    }
+
     return new Promise<number>((resolve, reject) => {
       this.resolveExited = resolve;
 
       try {
-        this.pty = spawn(this.options.shell, [], {
+        this.pty = ptyModule!.spawn(this.options.shell, [], {
           name: 'xterm-256color',
           cols: this.options.cols,
           rows: this.options.rows,
@@ -77,7 +87,7 @@ export class TerminalRecorder {
       });
 
       // Handle exit
-      this.pty.onExit(({ exitCode, signal }) => {
+      this.pty.onExit(({ exitCode, signal }: { exitCode: number; signal?: number }) => {
         this.stop().then(() => {
           resolve(exitCode ?? signal ?? 1);
         }).catch(reject);

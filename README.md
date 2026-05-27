@@ -1,193 +1,133 @@
 # AIFR — AI Flight Recorder
 
-> OpenTelemetry for AI Software Development
+> AI 软件开发的可观测性平台
 
-Record, replay, and analyze AI-assisted software development workflows.
+记录、回放、分析 AI 辅助编程的全过程。不只是聊天记录，而是结构化的执行图谱。
 
-AIFR captures AI coding sessions as structured event streams — not chat transcripts, but execution graphs. Every prompt, command, file change, test result, and retry is recorded as a replayable, auditable timeline.
+AIFR 捕获 AI 编程会话中的每一个 Prompt、终端命令、代码变更、测试结果和重试操作，生成可回放、可审计的时间线。
 
-## What AIFR Does
+## 截图
 
-When you use an AI coding agent (Claude Code, Codex CLI), a lot happens between your prompt and the final code change. AIFR captures the full picture:
+| 首页 | 时间线 |
+|------|--------|
+| <img src="docs/screenshots/homepage.png" width="400" /> | <img src="docs/screenshots/timeline.png" width="400" /> |
 
-- **Prompt** → the instruction you gave the AI
-- **Command** → terminal commands the AI executed
-- **Diff** → files changed and how
-- **Test** → test results (pass/fail)
-- **Retry** → when the AI tried again after a failure
-- **Terminal Output** → raw stdout/stderr from the session
+| 事件详情 | Prompt-to-Diff |
+|----------|----------------|
+| <img src="docs/screenshots/events-detail.png" width="400" /> | <img src="docs/screenshots/prompt-to-diff.png" width="400" /> |
 
-You can browse this timeline, replay the terminal session, and see which prompt produced which code change.
+| 终端回放 | Codex 支持 |
+|----------|-----------|
+| <img src="docs/screenshots/replay.png" width="400" /> | <img src="docs/screenshots/codex-timeline.png" width="400" /> |
 
-## Screenshots
-
-### Homepage
-
-<img src="docs/screenshots/homepage.png" width="600" alt="AIFR Homepage" />
-
-### Timeline
-
-Chronological event stream with colored markers for prompts, commands, tools, diffs, tests, and retries.
-
-<img src="docs/screenshots/timeline.png" width="700" alt="Timeline view" />
-
-### Events
-
-Search, filter by type, and inspect raw JSON for any event.
-
-<img src="docs/screenshots/events-detail.png" width="700" alt="Events view with JSON detail panel" />
-
-### Replay
-
-Terminal playback with play/pause, speed control (1x/2x/4x), and event markers on the progress bar.
-
-<img src="docs/screenshots/replay.png" width="700" alt="Replay view with terminal playback" />
-
-### Prompt-to-Diff
-
-Select a prompt and see its execution path — which tools were called and what files changed.
-
-<img src="docs/screenshots/prompt-to-diff.png" width="700" alt="Prompt-to-Diff mapping view" />
-
-### Codex CLI Support
-
-Imported Codex CLI sessions display correctly with agent identification and command events.
-
-<img src="docs/screenshots/codex-timeline.png" width="700" alt="Codex CLI session timeline" />
-
-## Quick Start
+## 快速开始
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Build
-pnpm build
-
-# Initialize in a project
-pnpm aifr init
-
-# Start recording
-pnpm aifr start
-
-# Import existing sessions
-pnpm aifr import claude --limit 10
-pnpm aifr import codex --limit 10
+# 一键安装使用
+npx aifr init
 ```
 
-### Step 1: Initialize
+或者全局安装：
 
 ```bash
-pnpm aifr init
+npm i -g aifr
 ```
 
-Creates a `.aifr/` directory in your project. This is where all session data is stored locally.
-
-### Step 2: Record a Session
+### 1. 初始化
 
 ```bash
-pnpm aifr start
+cd your-project
+aifr init
 ```
 
-Opens a terminal recorder. Use your AI coding agent as usual (Claude Code, Codex CLI, etc.). When you exit the terminal, the session is saved automatically.
+在项目中创建 `.aifr/` 目录，所有会话数据存储在本地。
 
-### Step 3: Import Existing Sessions
+### 2. 导入已有会话
 
-If you've already used Claude Code or Codex CLI, AIFR can import past sessions:
+如果你已经在用 Claude Code 或 Codex CLI，可以直接导入历史会话：
 
 ```bash
-pnpm aifr import claude          # Import last 10 Claude Code sessions
-pnpm aifr import codex --limit 5 # Import last 5 Codex CLI sessions
+aifr import claude          # 导入最近 10 个 Claude Code 会话
+aifr import codex --limit 5 # 导入最近 5 个 Codex CLI 会话
 ```
 
-Sessions are imported from:
-- Claude Code: `~/.claude/projects/`
-- Codex CLI: `~/.codex/sessions/`
-
-### Step 4: Browse in Web UI
+### 3. 启动 Web UI
 
 ```bash
-pnpm run dev:web
-# Open http://localhost:3000
+aifr ui
+# 自动打开浏览器 http://localhost:3000
 ```
 
-The Web UI shows all discovered projects and sessions. Click into a session to explore:
+Web UI 提供以下视图：
 
-| View | What it shows |
-|------|--------------|
-| **Timeline** | All events in chronological order — prompts, commands, diffs, tests, retries |
-| **Prompt-to-Diff** | Maps each AI prompt to the code changes it produced |
-| **Diff** | Side-by-side diff visualization for file changes |
-| **Replay** | Terminal playback with xterm.js — play, pause, change speed |
-| **Events** | Raw event browser with search, filter by type, and JSON detail drawer |
+| 视图 | 说明 |
+|------|------|
+| **时间线** | 按时间顺序展示所有事件 — Prompt、命令、Diff、测试、重试 |
+| **Prompt-to-Diff** | 每个 AI 指令对应的代码变更路径 |
+| **Diff** | 文件变更的并排对比视图 |
+| **回放** | 终端录像回放，支持播放/暂停/变速 |
+| **事件** | 原始事件浏览器，支持搜索、类型过滤、JSON 详情 |
 
-## CLI Commands
+### 4. 录制新会话
 
-| Command | Description |
-|---------|-------------|
-| `aifr init` | Initialize `.aifr/` in the current project |
-| `aifr start` | Start recording a new session (opens a terminal) |
-| `aifr status` | List recorded sessions |
-| `aifr import claude` | Import Claude Code sessions |
-| `aifr import codex` | Import Codex CLI sessions |
+```bash
+aifr start
+```
 
-## Supported AI Agents
+启动终端录制器，正常使用 AI 编程工具即可。退出终端时自动保存会话。
 
-| Agent | Import | Live Recording |
-|-------|--------|----------------|
-| Claude Code | Yes | Yes |
-| Codex CLI | Yes | Yes |
-| Cursor | Planned | Planned |
+## 命令一览
 
-## Data Storage
+```bash
+aifr init              # 在当前项目初始化 AIFR
+aifr start             # 启动终端录制，开始新会话
+aifr status            # 查看已录制的会话列表
+aifr import claude     # 导入 Claude Code 历史会话
+aifr import codex      # 导入 Codex CLI 历史会话
+aifr ui                # 启动 Web UI
+```
 
-All data stays on your machine. Sessions are stored in `.aifr/sessions/`:
+## 支持的 AI 工具
+
+| 工具 | 导入历史会话 | 实时录制 |
+|------|-------------|---------|
+| Claude Code | 支持 | 支持 |
+| Codex CLI | 支持 | 支持 |
+| Cursor | 计划中 | 计划中 |
+
+## 数据存储
+
+所有数据保存在本地，不会上传到任何服务器。
 
 ```
 .aifr/sessions/
   20260526_120011/
-    events.jsonl          # Structured event stream
-    terminal.log          # Raw terminal output
-    metadata.json         # Session info (timestamps, agent, git ref)
+    events.jsonl          # 结构化事件流
+    terminal.log          # 终端原始输出
+    metadata.json         # 会话元数据（时间戳、工具类型、Git 引用）
     git/
-      before.patch        # Git diff at session start
-      after.patch         # Git diff at session end
+      before.patch        # 会话开始时的 Git diff
+      after.patch         # 会话结束时的 Git diff
 ```
 
-No data is uploaded anywhere. No cloud sync. No telemetry.
-
-## Development
+## 开发
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Build all packages
-pnpm build
-
-# Type-check
-pnpm typecheck
-
-# Run CLI
-pnpm aifr <command>
-
-# Start web UI
-pnpm run dev:web
+pnpm install       # 安装依赖
+pnpm build:cli     # 构建 CLI 和核心包
+pnpm dev:web       # 启动 Web UI 开发服务器
+pnpm aifr <cmd>    # 开发模式运行 CLI
 ```
 
-## Known Limitations
+## 已知限制
 
-- Imported sessions have no structured diff events or git patches
-- Codex sessions contain commands but no user prompts in the event stream
-- Replay playback is based on terminal log output, not structured timing data
-- Prompt-to-Diff mapping is inferred, not guaranteed to be exact
+- 导入的会话没有结构化的 Diff 事件和 Git patch
+- Codex 会话包含命令但没有用户 Prompt
+- 终端回放基于输出内容而非精确时间戳
+- Prompt-to-Diff 映射是推断的，不保证准确
 
-See [docs/known-limitations.md](docs/known-limitations.md) for details.
+详见 [docs/known-limitations.md](docs/known-limitations.md)。
 
-## Roadmap
-
-See [docs/roadmap.md](docs/roadmap.md) for planned features including Cursor support, SQLite search, and more.
-
-## License
+## 许可证
 
 MIT
