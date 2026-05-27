@@ -26,7 +26,7 @@ export function parseJSONLContent(content: string): ParseResult {
     } catch (err) {
       errors.push({
         line: i + 1,
-        content: line.slice(0, 100),
+        content: `[omitted — ${line.length} chars]`,
         error: err instanceof Error ? err.message : String(err),
       });
     }
