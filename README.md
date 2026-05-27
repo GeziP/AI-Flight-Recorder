@@ -47,8 +47,9 @@ npx @gezip/aifr init
 如果你已经在用 Claude Code 或 Codex CLI，可以直接导入历史会话：
 
 ```bash
-npx @gezip/aifr import claude          # 导入最近 10 个 Claude Code 会话
-npx @gezip/aifr import codex --limit 5 # 导入最近 5 个 Codex CLI 会话
+npx @gezip/aifr import claude          # 导入全部 Claude Code 会话
+npx @gezip/aifr import codex           # 导入全部 Codex CLI 会话
+npx @gezip/aifr import codex --limit 5 # 只导入最近 5 个
 ```
 
 ### 3. 启动 Web UI

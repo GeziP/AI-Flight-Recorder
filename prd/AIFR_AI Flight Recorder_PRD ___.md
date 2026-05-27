@@ -121,11 +121,11 @@ Entry Point & First-Time User Experience
   * Prompt-to-Diff
   * Replay
 * 安装体验必须零摩擦：
-  * `npx aifr init` — 无需安装，直接运行
-  * `npm i -g aifr` — 全局安装后所有命令可用
-  * Web UI 通过 `aifr ui` 一键启动，无需 clone 或手动构建
+  * `npx @gezip/aifr init` — 无需安装，直接运行
+  * `npm i -g @gezip/aifr` — 全局安装后所有命令可用
+  * Web UI 通过 `aifr ui` 一键启动（当前版本需从源码构建 standalone 产物）
 * 首次使用是 CLI-first：
-  * 用户运行 `npx aifr init`（或全局安装后 `aifr init`）。
+  * 用户运行 `npx @gezip/aifr init`（或全局安装后 `aifr init`）。
   * 用户进入一个 Git 仓库。
   * AIFR 创建 `.aifr/` 并确认项目已准备好。
 * 用户有两种入口：
@@ -231,7 +231,7 @@ AIFR 不把这次过程记录成聊天导出，而是记录成事件流。当开
 ### User-Centric Metrics
 
 * Time to first recorded session：从安装到完成第一个 `aifr start` session 的中位时间低于 10 分钟。
-* One-click install success rate：`npx aifr init` 在首次尝试中成功执行的比例达到 95%。
+* One-click install success rate：`npx @gezip/aifr init` 在首次尝试中成功执行的比例达到 95%。
 * npm weekly downloads：发布后 4 周内周下载量达到 500+。
 * Replay usage：至少 50% 完成录制的用户会打开 Replay 或 Timeline。
 * Prompt-to-Diff usage：至少 40% 被检查的 session 中发生至少一次 Prompt-to-Diff 查看行为。
@@ -335,12 +335,13 @@ aifr/
 | Search | SQLite FTS |
 
 * 起步阶段不建议使用 Go 或 Rust，因为当前最重要的是快速吃到 JavaScript/TypeScript 生态，而不是极致性能。
-* npm 分发策略：
-  * `apps/cli` 作为 npm 发布入口，包名 `aifr`。
-  * `bin` 字段指向编译后的 CLI 入口（支持 CJS 和 ESM）。
-  * `node-pty` 为 optional dependency，安装失败不阻塞其余功能。
-  * Web UI 构建为 Next.js standalone 产物，随 CLI 包一起分发，`aifr ui` 启动内嵌服务器。
-  * 使用 GitHub Actions CI，tag push 自动触发 `npm publish`。
+* npm 分发策略（已实现）：
+  * `apps/cli` 作为发布入口，包名 `@gezip/aifr`，发布到 GitHub Packages（`npm.pkg.github.com`）。
+  * `bin` 字段通过 `bin.js` → `dist/index.cjs`（动态 import），全局安装后命令名为 `aifr`。
+  * 使用 `tsup` 编译为 CJS + ESM 双格式，`shims: true` 处理 `import.meta` 跨格式兼容。
+  * `node-pty` 为 optional dependency，动态 import 加降级提示，安装失败不阻塞其余功能。
+  * Web UI 暂不内嵌 npm 包（standalone 产物 25MB 过大），后续优化体积后再集成。当前通过 `pnpm dev:web` 开发模式使用。
+  * 使用 GitHub Actions CI，tag push 自动触发发布，`GITHUB_TOKEN` 自带权限。
 * VS Code 扩展分发（v0.2）：
   * 扩展独立仓库或在 monorepo 中新增 `apps/vscode/`。
   * 通过 VS Code Marketplace 和 Open VSX 发布。
@@ -546,24 +547,28 @@ Phase 5: Polish, Open-source Release, and Feedback Loop（2–4 天）
   * 本地录制不存在明确数据丢失问题。
   * README 第一屏能准确传达：AIFR 不是聊天记录工具，而是 AI 开发过程观测平台。
 
-Phase 6: npm Publishing & One-Click Install（3–4 天）
+Phase 6: Package Publishing & One-Click Install（已完成）
 
-* Key Deliverables:
-  * 将 CLI 发布到 npm registry（包名 `aifr`），支持 `npx aifr` 和 `npm i -g aifr`。
-  * 实现 `aifr ui` 命令：内嵌 Next.js 构建产物，一键启动 Web UI 并自动打开浏览器。
-  * CLI 的 `node-pty` 依赖处理为 optional dependency，npm install 失败时降级提示而不阻塞安装。
-  * 构建 pipeline：`pnpm build` 后自动将 `apps/web/.next/` standalone 输出和 CLI 产物打包到 `apps/cli/` 发布目录。
-  * README 更新安装方式为 `npx aifr init`，移除 clone + pnpm install 的手动步骤。
-  * CI 自动发布：tag push 触发 `npm publish`，确保版本号一致。
-* Dependencies:
-  * Phase 4 Web UI 稳定可用。
-  * CLI 所有命令在全局安装模式下路径解析正确。
-  * `node-pty` 在主流平台（macOS、Linux、Windows）的 prebuilt binary 可用。
-* Technical Considerations:
-  * 使用 Next.js `output: 'standalone'` 将 Web UI 构建为自包含产物，避免运行时依赖 `node_modules`。
-  * `apps/cli/package.json` 的 `bin` 字段指向编译后的入口文件。
-  * `node-pty` 标记为 `optionalDependencies`，install 失败时 `aifr start` 降级为无终端录制模式，其余命令正常工作。
-  * 使用 `tsup` 将 CLI 编译为单文件 CJS + ESM 双格式输出。
+* 实现方案:
+  * 包发布到 GitHub Packages（registry: `npm.pkg.github.com`），包名 `@gezip/aifr`。
+  * 支持一键安装：`npx @gezip/aifr init`，或全局安装 `npm i -g @gezip/aifr`。
+  * 全局安装后命令名为 `aifr`（通过 `bin.js` → `dist/index.cjs`）。
+  * 使用 GitHub Actions CI，tag push 自动触发发布，`GITHUB_TOKEN` 自带权限，无需额外配置 npm token。
+  * `aifr ui` 命令已实现：查找 Next.js standalone 产物并启动服务器，自动打开浏览器。当前 npm 包不内嵌 Web UI（standalone 产物 25MB 过大），`aifr ui` 提示用户从源码构建或使用 `dev:web`。后续版本优化 Web UI 打包体积后再内嵌。
+  * `node-pty` 移至 `optionalDependencies`（`@aifr/core` 和 CLI 包均声明），动态 import 加降级提示，安装失败不阻塞其余功能。
+  * `import` 命令默认导入全部会话，只有指定 `--limit` 时才限制数量。
+  * CLI 使用 `tsup` 编译为 CJS + ESM 双格式，`shims: true` 处理 `import.meta` 跨格式兼容。
+  * README 重写为中文。
+* Key Deliverables（已完成）:
+  * ✅ `apps/cli/package.json`：包名 `@gezip/aifr`，`publishConfig.registry` 指向 GitHub Packages。
+  * ✅ `apps/cli/bin.js`：bin 入口，动态 import CJS 产物。
+  * ✅ `apps/cli/src/commands/ui.ts`：`aifr ui` 命令实现。
+  * ✅ `apps/cli/tsup.config.ts`：双格式输出 + shims。
+  * ✅ `apps/web/next.config.mjs`：`output: 'standalone'`。
+  * ✅ `scripts/pack-web.mjs`：standalone 产物打包脚本（后续优化体积后启用）。
+  * ✅ `packages/core/package.json` + `src/terminal-recorder.ts`：node-pty optional + 动态 import。
+  * ✅ `.github/workflows/publish.yml`：tag push → GitHub Packages 发布。
+  * ✅ `README.md`：中文版，`npx @gezip/aifr` 安装方式。
 
 Phase 7: VS Code Extension（v0.2，10–14 天）
 
