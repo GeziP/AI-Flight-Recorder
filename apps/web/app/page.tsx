@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { discoverProjects } from '@/lib/session-discovery';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const projects = await discoverProjects();
 

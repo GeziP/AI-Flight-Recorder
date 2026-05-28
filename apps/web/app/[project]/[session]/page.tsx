@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { TimelineView } from '@/components/timeline/timeline-view';
 
+export const dynamic = 'force-dynamic';
+
 export default async function TimelinePage({
   params,
 }: {

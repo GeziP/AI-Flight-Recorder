@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { readEventsFile } from '@/lib/jsonl-reader';
 import { resolveSessionDir } from '@/lib/project-resolver';
 import path from 'node:path';
