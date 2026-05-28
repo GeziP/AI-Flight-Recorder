@@ -151,13 +151,13 @@ pnpm publish:release  # 发布到 npm（需登录）
 也可通过 GitHub Releases 发布：
 
 ```bash
-gh release create v0.1.3 aifr-0.1.3.tgz --title "v0.1.3" --generate-notes
+gh release create v0.1.4 aifr-0.1.4.tgz --title "v0.1.4" --generate-notes
 ```
 
 ## 已知限制
 
-- 导入的会话没有结构化的 Diff 事件和 Git patch
-- Codex 会话包含命令但没有用户 Prompt
+- 导入的会话的 Git patch 是导入时刻的项目状态，不是会话当时的精确快照
+- Codex 会话包含命令但没有用户 Prompt，且无法定位原始项目目录
 - 终端回放基于输出内容而非精确时间戳
 - Prompt-to-Diff 映射是推断的，不保证准确
 - `aifr start` 需要在真实终端中运行，管道 stdin 不支持 raw mode

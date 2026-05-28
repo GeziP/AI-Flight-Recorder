@@ -98,7 +98,7 @@ AI 工具开发者
   * Timeline View：展示 Prompt、命令、Diff、测试结果、重试和最终 Patch 进展。
   * Prompt-to-Diff View：展示某个 Prompt 及其可能生成或影响的文件变化。
   * Replay View：使用 xterm.js 回放终端输出和命令序列。
-  * Diff Visualization：使用 diff2html 支持 side-by-side Diff 和 timeline Diff。
+  * Diff Visualization：自研 DiffViewer 支持 side-by-side 和 unified 两种模式，可选语法高亮。
   * Event Detail Drawer：允许用户查看原始事件 payload，但该能力应作为高级调试功能，而不是主界面中心。
 
 * Search and Inspection（Priority: P2）
@@ -121,11 +121,10 @@ Entry Point & First-Time User Experience
   * Prompt-to-Diff
   * Replay
 * 安装体验必须零摩擦：
-  * `npx @gezip/aifr init` — 无需安装，直接运行
-  * `npm i -g @gezip/aifr` — 全局安装后所有命令可用
-  * Web UI 通过 `aifr ui` 一键启动（当前版本需从源码构建 standalone 产物）
+  * `npm i -g https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.4/aifr-0.1.4.tgz` — 从 GitHub Release 全局安装
+  * Web UI 通过 `aifr ui` 一键启动（内嵌在 npm 包中，无需额外构建）
 * 首次使用是 CLI-first：
-  * 用户运行 `npx @gezip/aifr init`（或全局安装后 `aifr init`）。
+  * 用户运行 `aifr init`。
   * 用户进入一个 Git 仓库。
   * AIFR 创建 `.aifr/` 并确认项目已准备好。
 * 用户有两种入口：
@@ -336,12 +335,13 @@ aifr/
 
 * 起步阶段不建议使用 Go 或 Rust，因为当前最重要的是快速吃到 JavaScript/TypeScript 生态，而不是极致性能。
 * npm 分发策略（已实现）：
-  * `apps/cli` 作为发布入口，包名 `@gezip/aifr`，发布到 GitHub Packages（`npm.pkg.github.com`）。
+  * `apps/cli` 作为发布入口，包名 `aifr`，通过 GitHub Release 分发 tarball。
+  * 安装方式：`npm i -g https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.4/aifr-0.1.4.tgz`
   * `bin` 字段通过 `bin.js` → `dist/index.cjs`（动态 import），全局安装后命令名为 `aifr`。
   * 使用 `tsup` 编译为 CJS + ESM 双格式，`shims: true` 处理 `import.meta` 跨格式兼容。
   * `node-pty` 为 optional dependency，动态 import 加降级提示，安装失败不阻塞其余功能。
-  * Web UI 暂不内嵌 npm 包（standalone 产物 25MB 过大），后续优化体积后再集成。当前通过 `pnpm dev:web` 开发模式使用。
-  * 使用 GitHub Actions CI，tag push 自动触发发布，`GITHUB_TOKEN` 自带权限。
+  * Web UI 已内嵌 npm 包（通过 `scripts/pack-web.mjs` 将 .next 产物复制到 dist/web）。
+  * `aifr ui` 自动查找内嵌的 Web 产物并启动 Next.js 服务器。
 * VS Code 扩展分发（v0.2）：
   * 扩展独立仓库或在 monorepo 中新增 `apps/vscode/`。
   * 通过 VS Code Marketplace 和 Open VSX 发布。
@@ -418,7 +418,7 @@ export type Event =
 * Git 仓库集成通过 simple-git 完成。
 * 本地终端录制通过 node-pty 完成。
 * Web Replay 通过 xterm.js 完成。
-* Diff 可视化通过 diff2html 完成。
+* Diff 可视化通过自研 DiffViewer 组件完成（支持 side-by-side、unified、可选语法高亮）。
 * 本地索引和搜索通过 SQLite 与 SQLite FTS 完成。
 
 ### Data Storage & Privacy
@@ -550,25 +550,26 @@ Phase 5: Polish, Open-source Release, and Feedback Loop（2–4 天）
 Phase 6: Package Publishing & One-Click Install（已完成）
 
 * 实现方案:
-  * 包发布到 GitHub Packages（registry: `npm.pkg.github.com`），包名 `@gezip/aifr`。
-  * 支持一键安装：`npx @gezip/aifr init`，或全局安装 `npm i -g @gezip/aifr`。
+  * 包名 `aifr`，通过 GitHub Release 分发 tarball。
+  * 安装方式：`npm i -g https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.4/aifr-0.1.4.tgz`。
   * 全局安装后命令名为 `aifr`（通过 `bin.js` → `dist/index.cjs`）。
-  * 使用 GitHub Actions CI，tag push 自动触发发布，`GITHUB_TOKEN` 自带权限，无需额外配置 npm token。
-  * `aifr ui` 命令已实现：查找 Next.js standalone 产物并启动服务器，自动打开浏览器。当前 npm 包不内嵌 Web UI（standalone 产物 25MB 过大），`aifr ui` 提示用户从源码构建或使用 `dev:web`。后续版本优化 Web UI 打包体积后再内嵌。
-  * `node-pty` 移至 `optionalDependencies`（`@aifr/core` 和 CLI 包均声明），动态 import 加降级提示，安装失败不阻塞其余功能。
-  * `import` 命令默认导入全部会话，只有指定 `--limit` 时才限制数量。
+  * `aifr ui` 命令已实现：查找内嵌的 Next.js 产物并启动服务器，自动打开浏览器。
+  * Web UI 已内嵌到 npm 包（通过 `scripts/pack-web.mjs` 打包 .next 产物到 dist/web）。
+  * `node-pty` 移至 `optionalDependencies`，动态 import 加降级提示，安装失败不阻塞其余功能。
+  * `import` 命令默认导入全部会话，只有指定 `--limit` 时才限制数量。导入时自动从源 session 提取 cwd 并捕获 git diff。
   * CLI 使用 `tsup` 编译为 CJS + ESM 双格式，`shims: true` 处理 `import.meta` 跨格式兼容。
   * README 重写为中文。
 * Key Deliverables（已完成）:
-  * ✅ `apps/cli/package.json`：包名 `@gezip/aifr`，`publishConfig.registry` 指向 GitHub Packages。
+  * ✅ `apps/cli/package.json`：包名 `aifr`，通过 GitHub Release 分发。
   * ✅ `apps/cli/bin.js`：bin 入口，动态 import CJS 产物。
-  * ✅ `apps/cli/src/commands/ui.ts`：`aifr ui` 命令实现。
+  * ✅ `apps/cli/src/commands/ui.ts`：`aifr ui` 命令实现，内嵌 Web UI。
   * ✅ `apps/cli/tsup.config.ts`：双格式输出 + shims。
-  * ✅ `apps/web/next.config.mjs`：`output: 'standalone'`。
-  * ✅ `scripts/pack-web.mjs`：standalone 产物打包脚本（后续优化体积后启用）。
+  * ✅ `scripts/pack-web.mjs`：Web 产物打包脚本（已启用，内嵌到 CLI dist）。
   * ✅ `packages/core/package.json` + `src/terminal-recorder.ts`：node-pty optional + 动态 import。
-  * ✅ `.github/workflows/publish.yml`：tag push → GitHub Packages 发布。
-  * ✅ `README.md`：中文版，`npx @gezip/aifr` 安装方式。
+  * ✅ `README.md`：中文版，GitHub Release 安装方式。
+  * ✅ 导入会话支持 git diff 捕获（Claude session 从 attachment 提取 cwd）。
+  * ✅ DiffViewer 支持语法高亮（可选）、side-by-side/unified 模式。
+  * ✅ 时间线/Events/Diff 页面均实现分页渲染，大数据量不卡顿。
 
 Phase 7: VS Code Extension（v0.2，10–14 天）
 

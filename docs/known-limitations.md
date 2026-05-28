@@ -13,6 +13,12 @@
 - **No background recording** — The recording process must remain in the foreground. Closing the terminal ends the session.
 - **No `aifr replay` CLI command** — Replay is only available in the Web UI.
 
+## Import
+
+- **Imported diff is point-in-time** — The git diff captured during import reflects the project state at import time, not the session's original state. Marked with "Captured at import time" label.
+- **Codex sessions have no cwd** — Codex session files don't record the working directory, so git diff capture is not possible for Codex imports.
+- **Claude cwd from attachment entries** — The importer extracts the project path from attachment entries in the session JSONL. If the session has no attachments, cwd detection fails.
+
 ## Parsers
 
 - **Claude Code format may change** — The parser reads `~/.claude/projects/` JSONL files. If Anthropic changes the format in a future Claude Code update, the parser may break.
@@ -23,10 +29,10 @@
 
 ## Web UI
 
-- **No virtual scrolling** — Large sessions (10,000+ events) may slow down the timeline view.
 - **No dark/light mode toggle** — Only dark mode is implemented.
 - **Terminal replay is basic** — The replay view renders raw terminal output but does not support speed control or seeking beyond what's shown.
 - **No keyboard shortcuts** — Navigation is mouse-only in v0.1.
+- **Syntax highlighting is optional** — Enabled via checkbox to avoid performance issues with large diffs. Supported for TS/JS, CSS, JSON, YAML.
 
 ## Platform
 
