@@ -77,7 +77,9 @@ export async function discoverProjects(): Promise<DiscoveredProject[]> {
   const gitRoot = getGitRoot();
 
   // Search paths to scan for .aifr directories
+  // AIFR_PROJECT_PATH is set by `aifr ui` to point to the project directory
   const searchPaths = [
+    ...(process.env.AIFR_PROJECT_PATH ? [process.env.AIFR_PROJECT_PATH] : []),
     process.cwd(),
     ...(gitRoot && path.resolve(gitRoot) !== path.resolve(process.cwd()) ? [gitRoot] : []),
     homedir(),

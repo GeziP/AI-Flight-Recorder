@@ -8,4 +8,5 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   noExternal: ['@aifr/event-schema'],
+  external: ['node-pty'],
 });

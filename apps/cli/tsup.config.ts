@@ -9,4 +9,5 @@ export default defineConfig({
   sourcemap: false,
   shims: true,
   noExternal: ['@aifr/core', '@aifr/event-schema', '@aifr/parser-claude', '@aifr/parser-codex'],
+  external: ['node-pty'],
 });

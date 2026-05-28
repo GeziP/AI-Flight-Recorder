@@ -100,6 +100,7 @@ export function uiCommand(program: Command): Command {
         ...process.env,
         PORT: String(port),
         HOSTNAME: host,
+        AIFR_PROJECT_PATH: process.cwd(),
       };
 
       // On Windows, .cmd files need to be executed via shell

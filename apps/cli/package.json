@@ -50,10 +50,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@aifr/core": "workspace:^",
-    "@aifr/event-schema": "workspace:^",
-    "@aifr/parser-claude": "workspace:^",
-    "@aifr/parser-codex": "workspace:^",
     "commander": "catalog:",
     "next": "^14.2.0",
     "react": "^18.3.0",
@@ -63,6 +59,10 @@
     "node-pty": "catalog:"
   },
   "devDependencies": {
+    "@aifr/core": "workspace:^",
+    "@aifr/event-schema": "workspace:^",
+    "@aifr/parser-claude": "workspace:^",
+    "@aifr/parser-codex": "workspace:^",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "@types/node": "catalog:",
