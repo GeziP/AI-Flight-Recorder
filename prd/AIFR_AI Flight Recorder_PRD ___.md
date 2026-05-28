@@ -130,10 +130,6 @@ Entry Point & First-Time User Experience
 * 用户有两种入口：
   * 导入已有 Claude Code 或 Codex CLI session。
   * 从当前终端开始录制新的 AI 编程工作流。
-* v0.2 提供 VS Code 扩展入口：
-  * 侧栏直接查看 session 列表、回放、diff，无需开浏览器。
-  * 与编辑器深度集成：点击 diff 事件直接跳转到对应文件。
-
 Core Experience
 
 * Step 1: 在仓库中初始化 AIFR。
@@ -342,10 +338,6 @@ aifr/
   * `node-pty` 为 optional dependency，动态 import 加降级提示，安装失败不阻塞其余功能。
   * Web UI 已内嵌 npm 包（通过 `scripts/pack-web.mjs` 将 .next 产物复制到 dist/web）。
   * `aifr ui` 自动查找内嵌的 Web 产物并启动 Next.js 服务器。
-* VS Code 扩展分发（v0.2）：
-  * 扩展独立仓库或在 monorepo 中新增 `apps/vscode/`。
-  * 通过 VS Code Marketplace 和 Open VSX 发布。
-  * 复用 Web UI 组件和核心包，通过 Webview API 渲染。
 * `packages/core` 负责核心转换：Session → Event Stream。
 * `packages/event-schema` 负责统一事件类型。
 * 初始事件模型应包括：
@@ -471,7 +463,7 @@ export type Event =
 
 ### Project Estimate
 
-Medium：v0.1（Phase 1–5）2–4 周完成；Phase 6（npm 发布）额外 3–4 天；v0.2（Phase 7 VS Code 扩展）额外 7–10 天。
+Medium：v0.1（Phase 1–5）2–4 周完成；Phase 6（npm 发布）额外 3–4 天。
 
 ### Team Size & Composition
 
@@ -571,21 +563,3 @@ Phase 6: Package Publishing & One-Click Install（已完成）
   * ✅ DiffViewer 支持语法高亮（可选）、side-by-side/unified 模式。
   * ✅ 时间线/Events/Diff 页面均实现分页渲染，大数据量不卡顿。
 
-Phase 7: VS Code Extension（v0.2，10–14 天）
-
-* Key Deliverables:
-  * 发布 VS Code 扩展 `aifr-vscode`，在侧栏显示项目 session 列表。
-  * 内嵌 Webview 实现 Timeline、Replay、Diff 视图，复用 Web UI 组件。
-  * 点击 diff 事件跳转到编辑器对应文件和行号。
-  * 点击 session 自动启动内置 replay，无需外部浏览器。
-  * 提供快捷命令：`AIFR: Import Session`、`AIFR: Open Timeline`、`AIFR: Start Recording`。
-  * VS Code Marketplace 发布，支持一键安装。
-  * 建议拆分为 v0.2.0（基本侧栏 + session 列表）和 v0.2.1（深度集成：diff 跳转、patch 解析）。
-* Dependencies:
-  * Phase 6 npm 发布完成，CLI 可作为 dependency 被 extension 调用。
-  * Web UI 组件可独立打包为 Webview 消费的 JS bundle。
-* Technical Considerations:
-  * Extension 使用 VS Code Webview API，通过 iframe 加载 Web UI 页面或打包后的 JS bundle。
-  * 复用 `@aifr/event-schema` 和 `@aifr/core` 包，避免逻辑重复。
-  * Session 发现逻辑复用 `session-discovery.ts`，通过 extension host 的 Node.js 环境运行。
-  * 文件跳转通过 VS Code `workspace.openTextDocument` + `TextEditor.revealRange` API 实现。
