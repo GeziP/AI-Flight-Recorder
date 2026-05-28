@@ -8,6 +8,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   shims: true,
-  noExternal: ['@aifr/core', '@aifr/event-schema', '@aifr/parser-claude', '@aifr/parser-codex'],
+  noExternal: ['@aifr/core', '@aifr/event-schema', '@aifr/parser-claude', '@aifr/parser-codex', '@aifr/graph-builder', '@aifr/analyzer'],
   external: ['node-pty'],
 });

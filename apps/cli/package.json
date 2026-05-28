@@ -63,6 +63,8 @@
     "@aifr/event-schema": "workspace:^",
     "@aifr/parser-claude": "workspace:^",
     "@aifr/parser-codex": "workspace:^",
+    "@aifr/graph-builder": "workspace:^",
+    "@aifr/analyzer": "workspace:^",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "@types/node": "catalog:",
