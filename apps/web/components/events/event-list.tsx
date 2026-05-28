@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import type {
   AIFREvent,
   SessionEvent,
@@ -28,6 +28,7 @@ const TYPE_CONFIG: Record<string, { dotClass: string; labelClass: string }> = {
 
 const FILTER_TYPES = ['all', 'prompt', 'command', 'diff', 'tool', 'test'] as const;
 type FilterType = (typeof FILTER_TYPES)[number];
+const PAGE_SIZE = 150;
 
 // ---- Timestamp formatting ----
 
@@ -112,6 +113,8 @@ interface EventListProps {
 export function EventList({ events, selectedId, onSelect }: EventListProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     let result = events;
@@ -134,6 +137,21 @@ export function EventList({ events, selectedId, onSelect }: EventListProps) {
 
     return result;
   }, [events, filter, search]);
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filter, search]);
+
+  useEffect(() => {
+    if (!hasMore || !sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) setVisibleCount((c) => c + PAGE_SIZE); },
+      { rootMargin: '200px' },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -170,43 +188,50 @@ export function EventList({ events, selectedId, onSelect }: EventListProps) {
             No events found
           </div>
         ) : (
-          filtered.map((event) => {
-            const config = TYPE_CONFIG[event.type] ?? TYPE_CONFIG.session;
-            const isSelected = event.id === selectedId;
+          <>
+            {visible.map((event) => {
+              const config = TYPE_CONFIG[event.type] ?? TYPE_CONFIG.session;
+              const isSelected = event.id === selectedId;
 
-            return (
-              <button
-                key={event.id}
-                onClick={() => onSelect(event.id)}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 text-left border-b border-border/50 transition-colors ${
-                  isSelected ? 'bg-bg-subtle' : 'hover:bg-bg-subtle/50'
-                }`}
-              >
-                {/* Timestamp */}
-                <span className="text-[11px] text-text-muted tabular-nums font-mono w-[72px] shrink-0">
-                  {formatTimestamp(event.timestamp)}
-                </span>
+              return (
+                <button
+                  key={event.id}
+                  onClick={() => onSelect(event.id)}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-left border-b border-border/50 transition-colors ${
+                    isSelected ? 'bg-bg-subtle' : 'hover:bg-bg-subtle/50'
+                  }`}
+                >
+                  {/* Timestamp */}
+                  <span className="text-[11px] text-text-muted tabular-nums font-mono w-[72px] shrink-0">
+                    {formatTimestamp(event.timestamp)}
+                  </span>
 
-                {/* Colored dot */}
-                <span className={`w-[6px] h-[6px] rounded-full shrink-0 ${config.dotClass}`} />
+                  {/* Colored dot */}
+                  <span className={`w-[6px] h-[6px] rounded-full shrink-0 ${config.dotClass}`} />
 
-                {/* Type label */}
-                <span className={`text-[11px] font-semibold w-[70px] shrink-0 ${config.labelClass}`}>
-                  {event.type.toUpperCase()}
-                </span>
+                  {/* Type label */}
+                  <span className={`text-[11px] font-semibold w-[70px] shrink-0 ${config.labelClass}`}>
+                    {event.type.toUpperCase()}
+                  </span>
 
-                {/* Summary */}
-                <span className="text-[12px] text-text-secondary truncate flex-1 min-w-0">
-                  {getSummary(event)}
-                </span>
+                  {/* Summary */}
+                  <span className="text-[12px] text-text-secondary truncate flex-1 min-w-0">
+                    {getSummary(event)}
+                  </span>
 
-                {/* Event ID */}
-                <span className="text-[10px] font-mono text-text-muted shrink-0">
-                  {event.id.slice(0, 8)}
-                </span>
-              </button>
-            );
-          })
+                  {/* Event ID */}
+                  <span className="text-[10px] font-mono text-text-muted shrink-0">
+                    {event.id.slice(0, 8)}
+                  </span>
+                </button>
+              );
+            })}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex items-center justify-center py-3 text-text-muted text-[11px]">
+                {visible.length} / {filtered.length}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

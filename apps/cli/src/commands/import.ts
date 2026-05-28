@@ -1,13 +1,29 @@
 import { Command } from 'commander';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { writeFile, mkdir } from 'node:fs/promises';
-import { findGitRoot } from '@aifr/core';
+import { findGitRoot, getFullDiff, getDiffStat, isGitRepo } from '@aifr/core';
+import type { DiffEvent } from '@aifr/event-schema';
 import { success, info, warn, error, header } from '../lib/output.js';
 
 const colors = {
   cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
   dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
 };
+
+/** Extract the working directory from the first attachment/system entry in a Claude JSONL session. */
+async function extractCwdFromSession(filePath: string): Promise<string | null> {
+  try {
+    const content = await readFile(filePath, 'utf8');
+    for (const line of content.split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const entry = JSON.parse(line);
+        if (entry.cwd && typeof entry.cwd === 'string') return entry.cwd;
+      } catch { /* skip malformed lines */ }
+    }
+  } catch { /* file not readable */ }
+  return null;
+}
 
 export function importCommand(program: Command): Command {
   return program
@@ -77,9 +93,49 @@ async function importClaudeSessions(outputDir: string, limit: number): Promise<v
       const sessionDir = path.resolve(outputDir, `imported-claude-${result.sourceSessionId}`);
       await mkdir(sessionDir, { recursive: true });
 
+      // Attempt to capture git diff from the session's original project directory.
+      // Parse the cwd from the first attachment entry in the source file.
+      const events = [...result.events];
+      let gitInfo = { hasDiff: false, patch: '', gitRoot: '' };
+      const sessionCwd = await extractCwdFromSession(session.sessionFile);
+      if (sessionCwd && await isGitRepo(sessionCwd)) {
+        const gitRoot = await findGitRoot(sessionCwd);
+        if (gitRoot) {
+          const patch = await getFullDiff(gitRoot);
+          if (patch.trim()) {
+            const gitDir = path.join(sessionDir, 'git');
+            await mkdir(gitDir, { recursive: true });
+            await writeFile(path.join(gitDir, 'after.patch'), patch, 'utf8');
+
+            const stat = await getDiffStat(gitRoot);
+            const baselineDiff: DiffEvent = {
+              id: `diff-baseline-${result.sourceSessionId}`,
+              sessionId: result.sessionId,
+              type: 'diff',
+              timestamp: Date.now(),
+              schemaVersion: '0.1.0',
+              files: stat.files.map(f => ({
+                path: f.path,
+                status: f.status,
+                additions: f.additions,
+                deletions: f.deletions,
+                previousPath: f.previousPath,
+              })),
+              totalAdditions: stat.totalAdditions,
+              totalDeletions: stat.totalDeletions,
+              isBaseline: false,
+              patch,
+              snapshotLabel: 'Captured at import time',
+            };
+            events.unshift(baselineDiff);
+            gitInfo = { hasDiff: true, patch, gitRoot };
+          }
+        }
+      }
+
       // Write events as JSONL
       const eventsPath = path.join(sessionDir, 'events.jsonl');
-      const jsonlContent = result.events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      const jsonlContent = events.map(e => JSON.stringify(e)).join('\n') + '\n';
       await writeFile(eventsPath, jsonlContent, 'utf8');
 
       // Write metadata
@@ -90,11 +146,16 @@ async function importClaudeSessions(outputDir: string, limit: number): Promise<v
         sourceFile: result.sourceFile,
         agentType: 'claude',
         importedAt: new Date().toISOString(),
-        eventCount: result.events.length,
+        eventCount: events.length,
         parseErrors: result.errors.length,
+        gitRoot: gitInfo.gitRoot || null,
+        gitDiffCaptured: gitInfo.hasDiff,
       }, null, 2), 'utf8');
 
-      success(`  Imported ${result.events.length} events from ${colors.dim(session.projectName)}`);
+      const diffNote = gitInfo.hasDiff
+        ? ` (+ git diff captured)`
+        : colors.dim(' (no git diff)');
+      success(`  Imported ${events.length} events from ${colors.dim(session.projectName)}${diffNote}`);
     } catch (err) {
       warn(`  Failed to import ${session.sessionId}: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -130,8 +191,46 @@ async function importCodexSessions(outputDir: string, limit: number): Promise<vo
       const sessionDir = path.resolve(outputDir, `imported-codex-${result.sourceSessionId}`);
       await mkdir(sessionDir, { recursive: true });
 
+      // Attempt to capture git diff from the session's working directory
+      const events = [...result.events];
+      let gitInfo = { hasDiff: false, patch: '', gitRoot: '' };
+      if (session.cwd && await isGitRepo(session.cwd)) {
+        const gitRoot = await findGitRoot(session.cwd);
+        if (gitRoot) {
+          const patch = await getFullDiff(gitRoot);
+          if (patch.trim()) {
+            const gitDir = path.join(sessionDir, 'git');
+            await mkdir(gitDir, { recursive: true });
+            await writeFile(path.join(gitDir, 'after.patch'), patch, 'utf8');
+
+            const stat = await getDiffStat(gitRoot);
+            const baselineDiff: DiffEvent = {
+              id: `diff-baseline-${result.sourceSessionId}`,
+              sessionId: result.sessionId,
+              type: 'diff',
+              timestamp: Date.now(),
+              schemaVersion: '0.1.0',
+              files: stat.files.map(f => ({
+                path: f.path,
+                status: f.status,
+                additions: f.additions,
+                deletions: f.deletions,
+                previousPath: f.previousPath,
+              })),
+              totalAdditions: stat.totalAdditions,
+              totalDeletions: stat.totalDeletions,
+              isBaseline: false,
+              patch,
+              snapshotLabel: 'Captured at import time',
+            };
+            events.unshift(baselineDiff);
+            gitInfo = { hasDiff: true, patch, gitRoot };
+          }
+        }
+      }
+
       const eventsPath = path.join(sessionDir, 'events.jsonl');
-      const jsonlContent = result.events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      const jsonlContent = events.map(e => JSON.stringify(e)).join('\n') + '\n';
       await writeFile(eventsPath, jsonlContent, 'utf8');
 
       const metaPath = path.join(sessionDir, 'metadata.json');
@@ -141,11 +240,16 @@ async function importCodexSessions(outputDir: string, limit: number): Promise<vo
         sourceFile: result.sourceFile,
         agentType: 'codex',
         importedAt: new Date().toISOString(),
-        eventCount: result.events.length,
+        eventCount: events.length,
         parseErrors: result.errors.length,
+        gitRoot: gitInfo.gitRoot || null,
+        gitDiffCaptured: gitInfo.hasDiff,
       }, null, 2), 'utf8');
 
-      success(`  Imported ${result.events.length} events`);
+      const diffNote = gitInfo.hasDiff
+        ? ` (+ git diff captured)`
+        : colors.dim(' (no git diff)');
+      success(`  Imported ${events.length} events${diffNote}`);
     } catch (err) {
       warn(`  Failed to import ${session.sessionId}: ${err instanceof Error ? err.message : String(err)}`);
     }

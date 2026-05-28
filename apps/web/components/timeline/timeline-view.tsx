@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { AIFREvent, EventType } from '@aifr/event-schema';
 import { TimelineEventRow } from './timeline-event';
 import { TimelineFilter } from './timeline-filter';
@@ -13,6 +13,8 @@ function formatDuration(ms: number): string {
   const secs = totalSec % 60;
   return `${mins}m ${secs}s`;
 }
+
+const PAGE_SIZE = 100;
 
 interface TimelineViewProps {
   events: AIFREvent[];
@@ -27,11 +29,36 @@ interface TimelineViewProps {
 
 export function TimelineView({ events, sessionName, metadata }: TimelineViewProps) {
   const [activeFilter, setActiveFilter] = useState<EventType | 'all'>('all');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const filteredEvents = useMemo(() => {
     if (activeFilter === 'all') return events;
     return events.filter((e) => e.type === activeFilter);
   }, [events, activeFilter]);
+
+  const visibleEvents = filteredEvents.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredEvents.length;
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeFilter]);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    if (!hasMore || !sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((c) => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore]);
 
   return (
     <div className="flex flex-col h-full">
@@ -68,13 +95,18 @@ export function TimelineView({ events, sessionName, metadata }: TimelineViewProp
           </div>
         ) : (
           <div>
-            {filteredEvents.map((event, index) => (
+            {visibleEvents.map((event, index) => (
               <TimelineEventRow
                 key={event.id}
                 event={event}
-                isLast={index === filteredEvents.length - 1}
+                isLast={index === visibleEvents.length - 1 && !hasMore}
               />
             ))}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex items-center justify-center py-4 text-text-muted text-[12px]">
+                Loading {Math.min(visibleCount, filteredEvents.length)} / {filteredEvents.length}...
+              </div>
+            )}
           </div>
         )}
       </div>

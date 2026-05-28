@@ -43,9 +43,9 @@ export function FileTabs({ files, selected, onSelect }: FileTabsProps) {
             </span>
             <span className="font-mono">{fileName}</span>
             <span className="text-[11px] text-text-muted ml-1">
-              <span className="text-test-pass">+{file.additions}</span>
+              <span className="text-green-700">+{file.additions}</span>
               {' / '}
-              <span className="text-test-fail">-{file.deletions}</span>
+              <span className="text-red-700">-{file.deletions}</span>
             </span>
           </button>
         );
