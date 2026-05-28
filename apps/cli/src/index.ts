@@ -7,6 +7,8 @@ import { importCommand } from './commands/import.js';
 import { uiCommand } from './commands/ui.js';
 import { graphCommand } from './commands/graph.js';
 import { analyzeCommand } from './commands/analyze.js';
+import { reportCommand } from './commands/report.js';
+import { redactCommand } from './commands/redact.js';
 
 const program = new Command();
 
@@ -21,6 +23,8 @@ statusCommand(program);
 importCommand(program);
 graphCommand(program);
 analyzeCommand(program);
+reportCommand(program);
+redactCommand(program);
 uiCommand(program);
 
 program.parse(process.argv);
