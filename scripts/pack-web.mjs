@@ -31,7 +31,7 @@ mkdirSync(cliDistWeb, { recursive: true });
 // Copy all .next/ root-level files (BUILD_ID, manifests, etc.)
 const nextEntries = readdirSync(nextDir);
 for (const entry of nextEntries) {
-  if (entry === 'standalone' || entry === 'cache' || entry === 'trace') continue;
+  if (entry === 'standalone' || entry === 'cache' || entry === 'trace' || entry === 'types') continue;
   const src = path.join(nextDir, entry);
   const dst = path.join(cliDistWeb, '.next', entry);
   if (statSync(src).isDirectory()) {
@@ -40,5 +40,11 @@ for (const entry of nextEntries) {
     cpSync(src, dst);
   }
 }
+
+// Write a minimal next.config.mjs so next start works in the bundled dir
+writeFileSync(
+  path.join(cliDistWeb, 'next.config.mjs'),
+  'export default {};\n',
+);
 
 console.log('Web UI packed to', cliDistWeb);
