@@ -22,10 +22,10 @@ AIFR 捕获 AI 编程会话中的每一个 Prompt、终端命令、代码变更�
 
 ## 安装
 
-<a href="https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.3/aifr-0.1.2.tgz"><img src="https://img.shields.io/badge/Download-v0.1.3-blue" alt="Download v0.1.3"></a>
+<a href="https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.4/aifr-0.1.4.tgz"><img src="https://img.shields.io/badge/Download-v0.1.4-blue" alt="Download v0.1.4"></a>
 
 ```bash
-npm i -g https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.3/aifr-0.1.2.tgz
+npm i -g https://github.com/GeziP/AI-Flight-Recorder/releases/download/v0.1.4/aifr-0.1.4.tgz
 ```
 
 安装完成后即可直接使用 `aifr` 命令。
