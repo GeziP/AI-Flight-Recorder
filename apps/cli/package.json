@@ -1,6 +1,6 @@
 {
   "name": "aifr",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "AI Flight Recorder — OpenTelemetry for AI Software Development",
   "license": "MIT",
   "type": "module",
