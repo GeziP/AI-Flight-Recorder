@@ -22,10 +22,10 @@
 - [x] CLI: `aifr replay` command (terminal replay in CLI)
 - [x] CLI: `aifr diff` command (inline diff in CLI)
 - [x] Session export (`aifr export`, gzip archive)
-- [x] Test coverage for all packages (68 tests)
+- [x] Test coverage for all packages (78 tests)
 - [x] Web UI: Overview, Graph (React Flow), Report views
-- [ ] SQLite FTS search across sessions
-- [ ] Cursor parser implementation
+- [x] SQLite FTS search across sessions (`aifr search`)
+- [x] Cursor parser implementation (`aifr import cursor`)
 
 ## v0.3 — Collaboration
 

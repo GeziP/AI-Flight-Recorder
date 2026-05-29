@@ -32,7 +32,7 @@ export function importCommand(program: Command): Command {
     .option('-o, --output <dir>', 'Output directory for imported sessions', '.aifr/sessions')
     .option('-l, --limit <n>', 'Maximum number of sessions to import')
     .action(async (agent: string, options: { output: string; limit?: string }) => {
-      const validAgents = ['claude', 'codex'];
+      const validAgents = ['claude', 'codex', 'cursor'];
       if (!validAgents.includes(agent)) {
         error(`Invalid agent: ${agent}. Must be one of: ${validAgents.join(', ')}`);
         process.exitCode = 1;
@@ -52,13 +52,15 @@ export function importCommand(program: Command): Command {
         ? options.output
         : path.resolve(baseDir, options.output);
 
-      header(`AIFR Import ${agent === 'claude' ? 'Claude Code' : 'Codex CLI'}`);
+      header(`AIFR Import ${agent === 'claude' ? 'Claude Code' : agent === 'codex' ? 'Codex CLI' : 'Cursor'}`);
 
       try {
         if (agent === 'claude') {
           await importClaudeSessions(outputDir, limit);
-        } else {
+        } else if (agent === 'codex') {
           await importCodexSessions(outputDir, limit);
+        } else {
+          await importCursorSessions(outputDir, limit);
         }
       } catch (err) {
         error(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -252,6 +254,60 @@ async function importCodexSessions(outputDir: string, limit: number): Promise<vo
       success(`  Imported ${events.length} events${diffNote}`);
     } catch (err) {
       warn(`  Failed to import ${session.sessionId}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  console.log('');
+  info(`Sessions written to ${outputDir}`);
+  info(`Run ${colors.cyan('aifr status')} to view imported sessions`);
+}
+
+async function importCursorSessions(outputDir: string, limit: number): Promise<void> {
+  const { discoverCursorSessions, importCursorSession } = await import('@aifr/parser-cursor');
+
+  const sessions = discoverCursorSessions();
+  info(`Found ${sessions.length} Cursor workspace(s) with AI data`);
+
+  if (sessions.length === 0) {
+    warn('No Cursor AI sessions found. Make sure Cursor has been used with AI features.');
+    return;
+  }
+
+  const toImport = sessions.slice(0, limit);
+  info(`Importing ${toImport.length} workspace(s)...\n`);
+
+  for (const session of toImport) {
+    try {
+      const result = importCursorSession(session);
+
+      if (result.errors.length > 0) {
+        warn(`  ${session.workspaceName}: ${result.errors.length} parse error(s)`);
+      }
+
+      const sessionDir = path.resolve(outputDir, `imported-cursor-${result.sourceSessionId}`);
+      await mkdir(sessionDir, { recursive: true });
+
+      const events = [...result.events];
+      const eventsPath = path.join(sessionDir, 'events.jsonl');
+      const jsonlContent = events.map(e => JSON.stringify(e)).join('\n') + '\n';
+      await writeFile(eventsPath, jsonlContent, 'utf8');
+
+      const metaPath = path.join(sessionDir, 'metadata.json');
+      await writeFile(metaPath, JSON.stringify({
+        sessionId: result.sessionId,
+        sourceSessionId: result.sourceSessionId,
+        sourceFile: result.sourceFile,
+        agentType: 'cursor',
+        importedAt: new Date().toISOString(),
+        eventCount: events.length,
+        parseErrors: result.errors.length,
+        workspaceName: session.workspaceName,
+      }, null, 2), 'utf8');
+
+      const genCount = session.generations.length;
+      success(`  Imported ${genCount} AI generations from ${colors.dim(session.workspaceName)}`);
+    } catch (err) {
+      warn(`  Failed to import ${session.workspaceName}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 

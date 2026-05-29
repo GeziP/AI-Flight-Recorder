@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "pnpm -r --filter '!@aifr/web' build && (pnpm --filter @aifr/web build || true) && node scripts/pack-web.mjs",
-    "build:cli": "pnpm --filter @aifr/event-schema build && pnpm --filter @aifr/graph-builder build && pnpm --filter @aifr/analyzer build && pnpm --filter @aifr/core build && pnpm --filter @aifr/parser-claude build && pnpm --filter @aifr/parser-codex build && pnpm --filter aifr build",
+    "build:cli": "pnpm --filter @aifr/event-schema build && pnpm --filter @aifr/graph-builder build && pnpm --filter @aifr/analyzer build && pnpm --filter @aifr/search build && pnpm --filter @aifr/core build && pnpm --filter @aifr/parser-claude build && pnpm --filter @aifr/parser-codex build && pnpm --filter @aifr/parser-cursor build && pnpm --filter aifr build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r typecheck",
@@ -20,6 +20,13 @@
   },
   "packageManager": "pnpm@10.33.2",
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "node-pty"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "node-pty",
+      "better-sqlite3"
+    ]
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0"
   }
 }

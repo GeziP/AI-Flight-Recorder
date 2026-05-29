@@ -12,6 +12,7 @@ import { redactCommand } from './commands/redact.js';
 import { replayCommand } from './commands/replay.js';
 import { diffCommand } from './commands/diff.js';
 import { exportCommand } from './commands/export.js';
+import { searchCommand } from './commands/search.js';
 
 const program = new Command();
 
@@ -31,6 +32,7 @@ redactCommand(program);
 replayCommand(program);
 diffCommand(program);
 exportCommand(program);
+searchCommand(program);
 uiCommand(program);
 
 program.parse(process.argv);

@@ -8,6 +8,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   shims: true,
-  noExternal: ['@aifr/core', '@aifr/event-schema', '@aifr/parser-claude', '@aifr/parser-codex', '@aifr/graph-builder', '@aifr/analyzer'],
-  external: ['node-pty'],
+  noExternal: ['@aifr/core', '@aifr/event-schema', '@aifr/parser-claude', '@aifr/parser-codex', '@aifr/parser-cursor', '@aifr/graph-builder', '@aifr/analyzer', '@aifr/search'],
+  external: ['node-pty', 'better-sqlite3'],
 });
