@@ -5,6 +5,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@aifr/event-schema'],
   },
+  transpilePackages: ['@xyflow/react'],
 };
 
 export default nextConfig;

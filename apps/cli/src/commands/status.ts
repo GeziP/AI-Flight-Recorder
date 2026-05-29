@@ -47,9 +47,10 @@ export function statusCommand(program: Command): Command {
           const metadataPath = path.join(sessionsDir, sessionName, 'metadata.json');
           const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'));
 
-          const statusIcon = metadata.status === 'recording'
+          const status: string = metadata.status ?? (metadata.importedAt ? 'imported' : 'unknown');
+          const statusIcon = status === 'recording'
             ? '\x1b[33m●\x1b[0m'
-            : metadata.status === 'completed'
+            : status === 'completed' || status === 'imported'
               ? '\x1b[32m●\x1b[0m'
               : '\x1b[31m●\x1b[0m';
 
@@ -58,7 +59,7 @@ export function statusCommand(program: Command): Command {
             : '...';
 
           console.log(`  ${statusIcon} ${sessionName}`);
-          console.log(`    Status:  ${metadata.status}`);
+          console.log(`    Status:  ${status}`);
           console.log(`    Agent:   ${metadata.agentType}`);
           console.log(`    Events:  ${metadata.eventCount ?? 0}`);
           console.log(`    Duration: ${duration}`);

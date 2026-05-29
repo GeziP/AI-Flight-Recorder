@@ -4,10 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const TABS = [
+  { label: 'Overview', path: '/overview' },
   { label: 'Timeline', path: '' },
+  { label: 'Graph', path: '/graph' },
   { label: 'Prompt-to-Diff', path: '/prompt-to-diff' },
   { label: 'Replay', path: '/replay' },
   { label: 'Diff', path: '/diff' },
+  { label: 'Report', path: '/report' },
   { label: 'Events', path: '/events' },
 ];
 
