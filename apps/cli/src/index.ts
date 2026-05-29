@@ -9,6 +9,9 @@ import { graphCommand } from './commands/graph.js';
 import { analyzeCommand } from './commands/analyze.js';
 import { reportCommand } from './commands/report.js';
 import { redactCommand } from './commands/redact.js';
+import { replayCommand } from './commands/replay.js';
+import { diffCommand } from './commands/diff.js';
+import { exportCommand } from './commands/export.js';
 
 const program = new Command();
 
@@ -25,6 +28,9 @@ graphCommand(program);
 analyzeCommand(program);
 reportCommand(program);
 redactCommand(program);
+replayCommand(program);
+diffCommand(program);
+exportCommand(program);
 uiCommand(program);
 
 program.parse(process.argv);

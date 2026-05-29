@@ -12,16 +12,20 @@
 - [x] Web UI: Timeline, Diff, Replay, Prompt-to-Diff, Events views
 - [x] Session format documentation
 
-## v0.2 — Polish & Reliability
+## v0.2 — Session Intelligence
 
-- [ ] CLI: `aifr replay` command (terminal replay in CLI)
-- [ ] CLI: `aifr diff` command (inline diff in CLI)
+- [x] Execution Graph builder (`aifr graph`)
+- [x] Session Analyzer (`aifr analyze`) with attribution and retry detection
+- [x] Prompt-to-Diff confidence scoring (high/medium/low)
+- [x] Secret redaction (`aifr redact`, 12 default rules)
+- [x] Review Report (`aifr report`, Markdown generation)
+- [x] CLI: `aifr replay` command (terminal replay in CLI)
+- [x] CLI: `aifr diff` command (inline diff in CLI)
+- [x] Session export (`aifr export`, gzip archive)
+- [x] Test coverage for all packages (68 tests)
+- [x] Web UI: Overview, Graph (React Flow), Report views
 - [ ] SQLite FTS search across sessions
 - [ ] Cursor parser implementation
-- [ ] Secret redaction hooks (detect tokens, keys, passwords)
-- [ ] Session export (zip/archive)
-- [ ] Prompt-to-Diff confidence scoring
-- [ ] Test coverage for all packages
 
 ## v0.3 — Collaboration
 
