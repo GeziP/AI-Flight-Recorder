@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { initCommand } from './commands/init.js';
 import { startCommand } from './commands/start.js';
 import { statusCommand } from './commands/status.js';
@@ -14,12 +17,15 @@ import { diffCommand } from './commands/diff.js';
 import { exportCommand } from './commands/export.js';
 import { searchCommand } from './commands/search.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+
 const program = new Command();
 
 program
   .name('aifr')
   .description('AI Flight Recorder - Record, replay, and analyze AI-assisted development')
-  .version('0.1.0');
+  .version(pkg.version);
 
 initCommand(program);
 startCommand(program);

@@ -5,13 +5,7 @@ import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 import { findAifrDir, resolveSessionDirs } from '../lib/session-utils.js';
-import { success, warn, error, header, info } from '../lib/output.js';
-
-const colors = {
-  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
-  cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
-  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
-};
+import { success, warn, error, header, info, colors } from '../lib/output.js';
 
 const SESSION_FILES = [
   'metadata.json',

@@ -3,15 +3,7 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { SessionSearchIndex } from '@aifr/search';
 import { findAifrDir } from '../lib/session-utils.js';
-import { success, warn, error, header, info } from '../lib/output.js';
-
-const colors = {
-  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
-  cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
-  green: (s: string) => `\x1b[32m${s}\x1b[0m`,
-  yellow: (s: string) => `\x1b[33m${s}\x1b[0m`,
-  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
-};
+import { success, warn, error, header, info, colors } from '../lib/output.js';
 
 export function searchCommand(program: Command): Command {
   return program

@@ -128,6 +128,7 @@ export class SessionSearchIndex {
 
   search(query: string, options: SearchOptions = {}): SearchResult[] {
     const ftsQuery = escapeFtsQuery(query);
+    const limit = options.limit ?? 100;
     let sql = `
       SELECT
         e.session_id,
@@ -153,11 +154,8 @@ export class SessionSearchIndex {
       params.push(options.type);
     }
 
-    sql += ' ORDER BY rank';
-    if (options.limit) {
-      sql += ' LIMIT ?';
-      params.push(options.limit);
-    }
+    sql += ' ORDER BY rank LIMIT ?';
+    params.push(limit);
 
     const rows = this.db.prepare(sql).all(...params) as Array<{
       session_id: string;
@@ -213,7 +211,8 @@ function extractSearchableContent(event: Record<string, unknown>): string | null
       return [filePaths, patch].filter(Boolean).join(' ');
     }
     case 'tool': {
-      const input = typeof event.input === 'string' ? event.input : JSON.stringify(event.input ?? '');
+      const rawInput = typeof event.input === 'string' ? event.input : JSON.stringify(event.input ?? '');
+      const input = rawInput.length > 2000 ? rawInput.substring(0, 2000) : rawInput;
       const output = typeof event.output === 'string' ? event.output : '';
       return [event.toolName, input, output].filter(Boolean).join(' ');
     }

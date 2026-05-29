@@ -1,13 +1,7 @@
 import { Command } from 'commander';
 import { findAifrDir, resolveSessionDirs, readEventsFromSession } from '../lib/session-utils.js';
-import { success, warn, error, header, info } from '../lib/output.js';
+import { success, warn, error, header, info, colors } from '../lib/output.js';
 import type { AIFREvent } from '@aifr/event-schema';
-
-const colors = {
-  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
-  cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
-  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
-};
 
 interface TerminalChunk {
   timestamp: number;

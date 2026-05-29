@@ -2,17 +2,8 @@ import { Command } from 'commander';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { findAifrDir, resolveSessionDirs, readEventsFromSession } from '../lib/session-utils.js';
-import { success, warn, error, header, info } from '../lib/output.js';
+import { success, warn, error, header, info, colors } from '../lib/output.js';
 import type { AIFREvent } from '@aifr/event-schema';
-
-const colors = {
-  dim: (s: string) => `\x1b[2m${s}\x1b[0m`,
-  cyan: (s: string) => `\x1b[36m${s}\x1b[0m`,
-  green: (s: string) => `\x1b[32m${s}\x1b[0m`,
-  red: (s: string) => `\x1b[31m${s}\x1b[0m`,
-  yellow: (s: string) => `\x1b[33m${s}\x1b[0m`,
-  bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
-};
 
 interface DiffFileInfo {
   path: string;
@@ -96,6 +87,7 @@ function printStatTable(diffs: DiffEntry[]): void {
       if (existing) {
         existing.additions += f.additions;
         existing.deletions += f.deletions;
+        existing.status = f.status;
       } else {
         allFiles.set(key, { ...f, diffIndex: diff.eventIndex });
       }

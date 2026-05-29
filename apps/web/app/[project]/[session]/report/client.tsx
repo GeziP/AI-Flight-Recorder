@@ -20,8 +20,13 @@ export function ReportClient({ report }: ReportClientProps) {
   );
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function renderMarkdown(md: string): string {
-  let html = md;
+  // Escape HTML first to prevent XSS, then apply Markdown rules
+  let html = escapeHtml(md);
 
   // Headers
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');

@@ -28,7 +28,7 @@ async function extractCwdFromSession(filePath: string): Promise<string | null> {
 export function importCommand(program: Command): Command {
   return program
     .command('import <agent>')
-    .description('Import sessions from an AI agent (claude, codex)')
+    .description('Import sessions from an AI agent (claude, codex, cursor)')
     .option('-o, --output <dir>', 'Output directory for imported sessions', '.aifr/sessions')
     .option('-l, --limit <n>', 'Maximum number of sessions to import')
     .action(async (agent: string, options: { output: string; limit?: string }) => {
@@ -147,6 +147,7 @@ async function importClaudeSessions(outputDir: string, limit: number): Promise<v
         sourceSessionId: result.sourceSessionId,
         sourceFile: result.sourceFile,
         agentType: 'claude',
+        status: 'completed',
         importedAt: new Date().toISOString(),
         eventCount: events.length,
         parseErrors: result.errors.length,
@@ -241,6 +242,7 @@ async function importCodexSessions(outputDir: string, limit: number): Promise<vo
         sourceSessionId: result.sourceSessionId,
         sourceFile: result.sourceFile,
         agentType: 'codex',
+        status: 'completed',
         importedAt: new Date().toISOString(),
         eventCount: events.length,
         parseErrors: result.errors.length,
@@ -298,6 +300,7 @@ async function importCursorSessions(outputDir: string, limit: number): Promise<v
         sourceSessionId: result.sourceSessionId,
         sourceFile: result.sourceFile,
         agentType: 'cursor',
+        status: 'completed',
         importedAt: new Date().toISOString(),
         eventCount: events.length,
         parseErrors: result.errors.length,

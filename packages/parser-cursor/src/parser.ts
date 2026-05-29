@@ -89,26 +89,28 @@ export function discoverCursorSessions(): CursorSession[] {
 
     try {
       const db = new Database(dbPath, { readonly: true });
-      const row = db.prepare("SELECT value FROM ItemTable WHERE key = 'aiService.generations'").get() as { value: Buffer } | undefined;
+      try {
+        const row = db.prepare("SELECT value FROM ItemTable WHERE key = 'aiService.generations'").get() as { value: Buffer } | undefined;
 
-      if (row) {
-        const generations: CursorGeneration[] = JSON.parse(row.value.toString());
-        if (generations.length > 0) {
-          const workspacePath = workspaceMap.get(wsDir) ?? wsDir;
-          const workspaceName = path.basename(workspacePath);
+        if (row) {
+          const generations: CursorGeneration[] = JSON.parse(row.value.toString());
+          if (generations.length > 0) {
+            const workspacePath = workspaceMap.get(wsDir) ?? wsDir;
+            const workspaceName = path.basename(workspacePath);
 
-          sessions.push({
-            sessionId: wsDir,
-            workspaceName,
-            workspaceDir: workspacePath,
-            dbPath,
-            generations,
-            composerHeaders: new Map(),
-          });
+            sessions.push({
+              sessionId: wsDir,
+              workspaceName,
+              workspaceDir: workspacePath,
+              dbPath,
+              generations,
+              composerHeaders: new Map(),
+            });
+          }
         }
+      } finally {
+        db.close();
       }
-
-      db.close();
     } catch { /* skip unreadable databases */ }
   }
 
@@ -117,22 +119,24 @@ export function discoverCursorSessions(): CursorSession[] {
   if (existsSync(globalDbPath)) {
     try {
       const globalDb = new Database(globalDbPath, { readonly: true });
-      const headersRow = globalDb.prepare("SELECT value FROM ItemTable WHERE key = 'composer.composerHeaders'").get() as { value: Buffer } | undefined;
+      try {
+        const headersRow = globalDb.prepare("SELECT value FROM ItemTable WHERE key = 'composer.composerHeaders'").get() as { value: Buffer } | undefined;
 
-      if (headersRow) {
-        const headersData = JSON.parse(headersRow.value.toString());
-        const allComposers = headersData.allComposers as Record<string, CursorComposerHeader>;
+        if (headersRow) {
+          const headersData = JSON.parse(headersRow.value.toString());
+          const allComposers = headersData.allComposers as Record<string, CursorComposerHeader>;
 
-        for (const session of sessions) {
-          for (const [, header] of Object.entries(allComposers)) {
-            if (header.composerId && !header.isDraft) {
-              session.composerHeaders.set(header.composerId, header);
+          for (const session of sessions) {
+            for (const [, header] of Object.entries(allComposers)) {
+              if (header.composerId && !header.isDraft) {
+                session.composerHeaders.set(header.composerId, header);
+              }
             }
           }
         }
+      } finally {
+        globalDb.close();
       }
-
-      globalDb.close();
     } catch { /* skip */ }
   }
 
