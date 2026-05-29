@@ -89,6 +89,7 @@ function extractStringFields(event: AIFREvent): StringFieldAccessor[] {
       fields.push({ value: (event as PromptEvent).content, setter: v => { (event as PromptEvent).content = v; } });
       break;
     case 'command':
+      fields.push({ value: (event as CommandEvent).command, setter: v => { (event as CommandEvent).command = v; } });
       if ((event as CommandEvent).stdout) fields.push({ value: (event as CommandEvent).stdout!, setter: v => { (event as CommandEvent).stdout = v; } });
       if ((event as CommandEvent).stderr) fields.push({ value: (event as CommandEvent).stderr!, setter: v => { (event as CommandEvent).stderr = v; } });
       break;

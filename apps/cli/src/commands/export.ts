@@ -58,7 +58,7 @@ export function exportCommand(program: Command): Command {
   return program
     .command('export [session-id]')
     .description('Export a session as a portable archive')
-    .option('--output <path>', 'Output file path (default: <session-name>.aifr.tar.gz)')
+    .option('--output <path>', 'Output file path (default: <session-name>.aifz)')
     .option('--dry-run', 'List files to be exported without creating archive')
     .option('--no-meta', 'Exclude metadata.json from manifest')
     .action(async (sessionId?: string, options?: { output?: string; dryRun?: boolean; meta?: boolean }) => {
@@ -98,9 +98,7 @@ export function exportCommand(program: Command): Command {
         return;
       }
 
-      const outputPath = options?.output ?? `${sessionName}.aifr.tar`;
-      const outputGzPath = outputPath.endsWith('.gz') ? outputPath : `${outputPath}.gz`;
-      const tarPath = outputPath.endsWith('.gz') ? outputPath.replace(/\.gz$/, '') : outputPath;
+      const outputPath = options?.output ?? `${sessionName}.aifz`;
 
       console.log(colors.bold('  Files:'));
       for (const f of files) {
@@ -108,33 +106,18 @@ export function exportCommand(program: Command): Command {
       }
       console.log('');
 
-      await buildTarGz(sessionDir, files, tarPath, outputGzPath);
+      await buildArchive(sessionDir, files, outputPath);
 
-      success(`Exported to ${outputGzPath} (${formatBytes(statSync(outputGzPath).size)})`);
+      success(`Exported to ${outputPath} (${formatBytes(statSync(outputPath).size)})`);
     });
 }
 
-async function buildTarGz(sessionDir: string, files: ManifestEntry[], tarPath: string, gzPath: string): Promise<void> {
+async function buildArchive(sessionDir: string, files: ManifestEntry[], outputPath: string): Promise<void> {
   const { createGzip } = await import('node:zlib');
 
-  // Simple tar-like format: concatenate all files with headers
-  // Using a custom minimal format since node-tar is not a dependency
   const chunks: Buffer[] = [];
 
-  for (const file of files) {
-    const filePath = path.join(sessionDir, file.path);
-    const content = await readFile(filePath);
-
-    // Header: JSON line with path and size, separated by newline
-    const header = Buffer.from(`FILE:${file.path}\n${content.length}\n`);
-    const footer = Buffer.from('\n');
-
-    chunks.push(header);
-    chunks.push(content);
-    chunks.push(footer);
-  }
-
-  // Add manifest
+  // Add manifest header
   const manifest = JSON.stringify({
     version: '0.2.0',
     exportedAt: new Date().toISOString(),
@@ -142,10 +125,21 @@ async function buildTarGz(sessionDir: string, files: ManifestEntry[], tarPath: s
   });
   chunks.unshift(Buffer.from(`AIFR_ARCHIVE:0.2.0\nMANIFEST:${manifest}\n`));
 
+  for (const file of files) {
+    const filePath = path.join(sessionDir, file.path);
+    const content = await readFile(filePath);
+
+    // Header: file path and size, separated by newline
+    const header = Buffer.from(`FILE:${file.path}\n${content.length}\n`);
+
+    chunks.push(header);
+    chunks.push(content);
+  }
+
   const combined = Buffer.concat(chunks);
 
   const gzip = createGzip();
-  const ws = fsCreateWriteStream(gzPath);
+  const ws = fsCreateWriteStream(outputPath);
 
   await pipeline(Readable.from(combined), gzip, ws);
 }
